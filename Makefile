@@ -1,7 +1,7 @@
 CC            := gcc
 OBJCPY        := objcopy
 STRIP         := strip
-LDFLAGS       :=
+LDFLAGS       := -lusb-1.0
 CFLAGS        :=
 CFLAGS        := $(CFLAGS) -Wall -Wextra -g # Set build warnings and debugging
 CFLAGS        := $(CFLAGS) -std=c99 # The standards to build to.
@@ -20,7 +20,7 @@ FILES_BASE    := $(basename $(GFILES))
 
 .PHONY: all clean echelon_emu qemu_virt emu emu-debug emu-linux emu-linux-debug emu-opensbi-linux emu-opensbi-linux-debug debug
 
-all: $(TARGET).dynamic $(TARGET).dynamic.strip $(TARGET).static $(TARGET).static.strip
+all: $(TARGET).dynamic $(TARGET).dynamic.strip # $(TARGET).static $(TARGET).static.strip
 
 rebuild: clean
 	$(MAKE) all
@@ -34,10 +34,10 @@ clean:
 	$(CC) $(CFLAGS) -c $^ -o $@
 
 $(TARGET).dynamic: $(GFILES)
-	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 $(TARGET).static: $(GFILES)
-	$(CC) $(CFLAGS) $(LDFLAGS) -static $^ -o $@
+	$(CC) $(CFLAGS) -static $^ -o $@ $(LDFLAGS)
 
 %.strip: %
 	$(STRIP) -s -x -R .comment $^ -o $@
