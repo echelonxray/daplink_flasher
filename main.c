@@ -76,6 +76,32 @@ ssize_t receive_data(libusb_device_handle* d_handle, unsigned char* data, size_t
 	return retval;
 }
 
+void talk_to_dap(libusb_device_handle* d_handle) {
+	unsigned char data[64];
+	int retval;
+
+	memset(data, 0, 64);
+	data[0] = 0x00;
+	data[1] = 0xFC;
+
+	retval = send_data(d_handle, data, 2);
+	if (retval >= 0) {
+		printf("Sent %d bytes via control transfer.\n", retval);
+		print_bytes(data, retval);
+	} else {
+		printf("Error: libusb_control_transfer(): (%d) \"%s\"\n", retval, libusb_strerror(retval));
+	}
+
+	retval = receive_data(d_handle, data, 64);
+	if (retval >= 0) {
+		printf("Received %d bytes via control transfer:\n", retval);
+		print_bytes(data, retval);
+	} else {
+		printf("Error: libusb_control_transfer(): (%d) \"%s\"\n", retval, libusb_strerror(retval));
+	}
+	return;
+}
+
 int main(int argc, char *argv[]) {
 	printf("[START]\n");
 
@@ -110,8 +136,6 @@ int main(int argc, char *argv[]) {
 	{
 		libusb_device *dev;
 		int i = 0;
-		//int j = 0;
-		//uint8_t path[8];
 
 		while ((dev = devs[i++]) != NULL) {
 			struct libusb_device_descriptor desc;
@@ -140,105 +164,17 @@ int main(int argc, char *argv[]) {
 					printf("Error: libusb_claim_interface(): (%d) \"%s\"\n", retval, libusb_strerror(retval));
 					exit(3);
 				}
+
+				talk_to_dap(d_handle);
+
 				break;
 			}
-			/*
-			printf("%04x:%04x (bus %d, device %d)",
-				desc.idVendor, desc.idProduct,
-				libusb_get_bus_number(dev), libusb_get_device_address(dev));
-
-			r = libusb_get_port_numbers(dev, path, sizeof(path));
-			if (r > 0) {
-				printf(" path: %d", path[0]);
-				for (j = 1; j < r; j++)
-					printf(".%d", path[j]);
-			}
-			printf("\n");
-			*/
-		}
-	}
-
-	if (d_handle != NULL) {
-		unsigned char data[500];
-		int retval;
-
-		memset(data, 0, 64);
-		data[0] = 0x00;
-		data[1] = 0xFC;
-
-		retval = send_data(d_handle, data, 2);
-		if (retval >= 0) {
-			printf("Sent %d bytes via control transfer.\n", retval);
-			print_bytes(data, retval);
-		} else {
-			printf("Error: libusb_control_transfer(): (%d) \"%s\"\n", retval, libusb_strerror(retval));
-		}
-
-		retval = receive_data(d_handle, data, 64);
-		if (retval >= 0) {
-			printf("Received %d bytes via control transfer:\n", retval);
-			print_bytes(data, retval);
-		} else {
-			printf("Error: libusb_control_transfer(): (%d) \"%s\"\n", retval, libusb_strerror(retval));
 		}
 	}
 
 	libusb_free_device_list(devs, 1);
 
 	libusb_exit(NULL);
-
-	/*
-	struct usb_bus *busses;
-	struct usb_bus *bus;
-	struct usb_device *dev;
-	int c, i, res;
-	char data[337];
-	char idata[10];
-
-	libusb_init(NULL);
-	usb_find_busses();
-	usb_find_devices();
-	busses = usb_get_busses();
-	for (bus = busses; bus; bus = bus->next) {
-		for (dev = bus->devices; dev; dev = dev->next) {
-			if (dev->descriptor.idProduct == 0x0204 && dev->descriptor.idVendor == 0x0d28) {
-				printf("Product id: %04hx", dev->descriptor.idProduct);
-				printf("Vendor id: %04hx \n", dev->descriptor.idVendor);
-
-				usb_dev_handle *l_Handle = usb_open(dev);
-				if (NULL == l_Handle) {
-					printf( "usb_open(): no handle to device\n" );
-				}
-				res = usb_claim_interface(l_Handle, 0);
-				if(res < -EBUSY) {
-					printf("Device interface not available to be claimed! \n");
-					exit(0);
-				}
-				if(res < -ENOMEM) {
-					printf("Insufficient Memory! \n");
-					exit(0);
-				}
-				printf( "\nPlease swipe your card\n", res);
-
-				res = usb_interrupt_read(l_Handle, 0x81, data, 337, -1);
-				printf( "\nusb_interrupt_read %d \n", res);
-
-				c = -1;
-				// I am interested in only 10 characters in this range
-				for(i = 1; i < 10; i++) {
-					idata[++c] = data[i];
-				}
-				c = atoi(idata);
-				printf("\nMy data : %d\n", c);
-
-				usb_release_interface(l_Handle, 0);
-				usb_close(l_Handle);
-			}
-		}
-	}
-	//getchar();
-	libusb_exit(0);
-	*/
 	
 	printf("[TRACE> File: \"%s\", Line Number: %d]\n", __FILE__, __LINE__);
 	
