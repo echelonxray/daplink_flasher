@@ -65,7 +65,7 @@ ssize_t receive_data(libusb_device_handle* d_handle, unsigned char* data, size_t
 	int len;
 	int retval;
 	retval = libusb_interrupt_transfer(d_handle, // Device Handle
-		                               0x81,     // Endpoint (Send)
+		                               0x81,     // Endpoint (Receive)
 		                               data,     // Data Buffer
 		                               length,   // Length
 		                               &len,     // Amount transferred
