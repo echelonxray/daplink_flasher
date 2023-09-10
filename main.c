@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <assert.h>
 #include <sys/ioctl.h>
 #include <linux/hiddev.h>
 #include <libusb-1.0/libusb.h>
@@ -76,29 +77,83 @@ ssize_t receive_data(libusb_device_handle* d_handle, unsigned char* data, size_t
 	return retval;
 }
 
+#define VERIFY_COM_RET_S(arg1, arg2, arg3) \
+	{ \
+		int retval; \
+		retval = send_data(arg1, arg2, arg3); \
+		assert(retval >= 0); \
+		printf("Sent %d bytes via control transfer:\n", retval); \
+		print_bytes(data, retval); \
+	}
+#define VERIFY_COM_RET_R(arg1, arg2, arg3) \
+	{ \
+		int retval; \
+		retval = receive_data(arg1, arg2, arg3); \
+		assert(retval >= 0); \
+		printf("Received %d bytes via control transfer:\n", retval); \
+		print_bytes(data, retval); \
+	}
+
 void talk_to_dap(libusb_device_handle* d_handle) {
 	unsigned char data[64];
-	int retval;
 
+	// Info
 	memset(data, 0, 64);
 	data[0] = 0x00;
-	data[1] = 0xFC;
+	data[1] = 0x04;
+	VERIFY_COM_RET_S(d_handle, data, 2);
+	memset(data, 0, 64);
+	VERIFY_COM_RET_R(d_handle, data, 64);
 
-	retval = send_data(d_handle, data, 2);
-	if (retval >= 0) {
-		printf("Sent %d bytes via control transfer.\n", retval);
-		print_bytes(data, retval);
-	} else {
-		printf("Error: libusb_control_transfer(): (%d) \"%s\"\n", retval, libusb_strerror(retval));
-	}
+	// Connect
+	memset(data, 0, 64);
+	data[0] = 0x02;
+	data[1] = 0x01;
+	VERIFY_COM_RET_S(d_handle, data, 2);
+	memset(data, 0, 64);
+	VERIFY_COM_RET_R(d_handle, data, 64);
 
-	retval = receive_data(d_handle, data, 64);
-	if (retval >= 0) {
-		printf("Received %d bytes via control transfer:\n", retval);
-		print_bytes(data, retval);
-	} else {
-		printf("Error: libusb_control_transfer(): (%d) \"%s\"\n", retval, libusb_strerror(retval));
-	}
+	// SWD Configure 
+	memset(data, 0, 64);
+	data[0] = 0x13;
+	data[1] = 0x00;
+	VERIFY_COM_RET_S(d_handle, data, 2);
+	memset(data, 0, 64);
+	VERIFY_COM_RET_R(d_handle, data, 64);
+
+	// Transfer Configure
+	memset(data, 0, 64);
+	data[0] = 0x04;
+	data[1] = 0x00;
+	data[2] = 0x00;
+	data[3] = 0x00;
+	data[4] = 0x00;
+	data[5] = 0x00;
+	VERIFY_COM_RET_S(d_handle, data, 6);
+	memset(data, 0, 64);
+	VERIFY_COM_RET_R(d_handle, data, 64);
+
+	// Transfer
+	memset(data, 0, 64);
+	data[0] = 0x05;
+	data[1] = 0x00;
+	data[2] = 0x02;
+	data[3] = 0x05;
+	data[4] = 0x00;
+	data[5] = 0x90;
+	data[6] = 0x02;
+	data[7] = 0x40;
+	data[8] = 0x0F;
+	VERIFY_COM_RET_S(d_handle, data, 9);
+	memset(data, 0, 64);
+	VERIFY_COM_RET_R(d_handle, data, 64);
+
+	// Disconnect
+	memset(data, 0, 64);
+	data[0] = 0x03;
+	VERIFY_COM_RET_S(d_handle, data, 1);
+	memset(data, 0, 64);
+	VERIFY_COM_RET_R(d_handle, data, 64);
 	return;
 }
 
