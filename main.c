@@ -98,12 +98,14 @@ void talk_to_dap(libusb_device_handle* d_handle) {
 	unsigned char data[64];
 
 	// Info
+	/*
 	memset(data, 0, 64);
 	data[0] = 0x00;
 	data[1] = 0x04;
 	VERIFY_COM_RET_S(d_handle, data, 2);
 	memset(data, 0, 64);
 	VERIFY_COM_RET_R(d_handle, data, 64);
+	*/
 
 	// Connect
 	memset(data, 0, 64);
@@ -114,6 +116,7 @@ void talk_to_dap(libusb_device_handle* d_handle) {
 	VERIFY_COM_RET_R(d_handle, data, 64);
 
 	// Set Clock
+	/*
 	memset(data, 0, 64);
 	data[0] = 0x11;
 	data[1] = 0x40;
@@ -123,45 +126,6 @@ void talk_to_dap(libusb_device_handle* d_handle) {
 	VERIFY_COM_RET_S(d_handle, data, 5);
 	memset(data, 0, 64);
 	VERIFY_COM_RET_R(d_handle, data, 64);
-
-	/*
-	memset(data, 0, 64);
-	data[0] = 0x12;
-	data[1] = 0x33;
-	data[2] = 0xFF;
-	data[3] = 0xFF;
-	data[4] = 0xFF;
-	data[5] = 0xFF;
-	data[6] = 0xFF;
-	data[7] = 0xFF;
-	data[8] = 0xFF;
-	VERIFY_COM_RET_S(d_handle, data, 9);
-	memset(data, 0, 64);
-	VERIFY_COM_RET_R(d_handle, data, 64);
-
-	memset(data, 0, 64);
-	data[0] = 0x12;
-	data[1] = 0x10;
-	data[2] = 0x9E;
-	data[3] = 0xE7;
-	VERIFY_COM_RET_S(d_handle, data, 4);
-	memset(data, 0, 64);
-	VERIFY_COM_RET_R(d_handle, data, 64);
-
-	memset(data, 0, 64);
-	data[0] = 0x12;
-	data[1] = 0x33;
-	data[2] = 0xFF;
-	data[3] = 0xFF;
-	data[4] = 0xFF;
-	data[5] = 0xFF;
-	data[6] = 0xFF;
-	data[7] = 0xFF;
-	data[8] = 0xFF;
-	VERIFY_COM_RET_S(d_handle, data, 9);
-	memset(data, 0, 64);
-	VERIFY_COM_RET_R(d_handle, data, 64);
-	*/
 
 	// Transfer Configure
 	memset(data, 0, 64);
@@ -180,47 +144,6 @@ void talk_to_dap(libusb_device_handle* d_handle) {
 	data[0] = 0x13;
 	data[1] = 0x00;
 	VERIFY_COM_RET_S(d_handle, data, 2);
-	memset(data, 0, 64);
-	VERIFY_COM_RET_R(d_handle, data, 64);
-
-	// SWJ Sequence
-	/*
-	memset(data, 0, 64);
-	data[0] = 0x12;
-	data[1] = 0x33;
-	data[2] = 0xFF;
-	data[3] = 0xFF;
-	data[4] = 0xFF;
-	data[5] = 0xFF;
-	data[6] = 0xFF;
-	data[7] = 0xFF;
-	data[8] = 0xFF;
-	VERIFY_COM_RET_S(d_handle, data, 9);
-	memset(data, 0, 64);
-	VERIFY_COM_RET_R(d_handle, data, 64);
-
-	// SWJ Sequence
-	memset(data, 0, 64);
-	data[0] = 0x12;
-	data[1] = 0x10;
-	data[2] = 0x9E;
-	data[3] = 0xE7;
-	VERIFY_COM_RET_S(d_handle, data, 4);
-	memset(data, 0, 64);
-	VERIFY_COM_RET_R(d_handle, data, 64);
-
-	// SWJ Sequence
-	memset(data, 0, 64);
-	data[0] = 0x12;
-	data[1] = 0x33;
-	data[2] = 0xFF;
-	data[3] = 0xFF;
-	data[4] = 0xFF;
-	data[5] = 0xFF;
-	data[6] = 0xFF;
-	data[7] = 0xFF;
-	data[8] = 0xFF;
-	VERIFY_COM_RET_S(d_handle, data, 9);
 	memset(data, 0, 64);
 	VERIFY_COM_RET_R(d_handle, data, 64);
 	*/
@@ -243,36 +166,6 @@ void talk_to_dap(libusb_device_handle* d_handle) {
 	VERIFY_COM_RET_S(d_handle, data, 4);
 	memset(data, 0, 64);
 	VERIFY_COM_RET_R(d_handle, data, 64);
-
-	// Transfer Block
-	/*
-	memset(data, 0, 64);
-	data[0] = 0x06;
-	data[1] = 0x00;
-	data[2] = 0x01;
-	data[3] = 0x00;
-	data[4] = 0x02 | 0x0;
-	VERIFY_COM_RET_S(d_handle, data, 5);
-	memset(data, 0, 64);
-	VERIFY_COM_RET_R(d_handle, data, 64);
-	*/
-
-	/*
-	// Transfer
-	memset(data, 0, 64);
-	data[0] = 0x05;
-	data[1] = 0x00;
-	data[2] = 0x02;
-	data[3] = 0x05;
-	data[4] = 0x00;
-	data[5] = 0x00;
-	data[6] = 0x03;
-	data[7] = 0x10;
-	data[8] = 0x0F;
-	VERIFY_COM_RET_S(d_handle, data, 9);
-	memset(data, 0, 64);
-	VERIFY_COM_RET_R(d_handle, data, 64);
-	*/
 
 	// Disconnect
 	memset(data, 0, 64);
