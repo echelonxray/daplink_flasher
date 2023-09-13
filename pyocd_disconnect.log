@@ -1,0 +1,11 @@
+pyocd> quit
+0104191 D uninit session <pyocd.core.session.Session object at 0x7fd194f79a10> [session]
+0104191 D uninit board <pyocd.board.mbed_board.MbedBoard object at 0x7fd192c2ea50> [board]
+0104191 D Sending notification to 1 subscribers: <Notification@0x7fd193ddfd50 event=<Event.PRE_DISCONNECT: 2> source=<pyocd.target.builtin.target_MAX32630.MAX32630 object at 0x7fd1959fe0d0> data=None> [notification]
+0104191 D trace: disconnect [cmsis_dap_probe]
+0104191 D   USB OUT> (1) 03 [pyusb_backend]
+0104193 D   USB IN < (64) 03 00 01 01 00 01 01 00 00 00 00 00 00 00 00 00 00 00 00 03 00 00 00 b0 00 00 00 2b 00 00 00 00 00 00 00 0d 00 00 00 e0 00 00 00 05 00 00 00 b1 [pyusb_backend]
+0104193 D   USB RD < (64) 03 00 01 01 00 01 01 00 00 00 00 00 00 00 00 00 00 00 00 03 00 00 00 b0 00 00 00 2b 00 00 00 00 00 00 00 0d 00 00 00 e0 00 00 00 05 00 00 00 b1 [pyusb_backend]
+0104193 D trace: close [cmsis_dap_probe]
+0104193 D closing interface [pyusb_backend]
+0104194 D [cmd:34] New _Command [dap_access_cmsis_dap]

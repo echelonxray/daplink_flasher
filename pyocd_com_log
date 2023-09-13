@@ -1,0 +1,98 @@
+// START: Connect
+
+[Step 1]
+> DAP INFO | Request: Max Packet Count (00 fe)
+< DAP INFO | Response: 4 (00 01 04)
+
+[Step 2]
+> DAP INFO | Request: CMSIS-DAP Protocol Version (00 04)
+< DAP INFO | Response: "1.0" (00 04 31 2e 30 00)
+
+[Step 3]
+> DAP INFO | Request: Max Packet Size (00 ff)
+< DAP INFO | Response: 64 (00 02 40 00)
+
+[Step 4]
+> DAP INFO | Request: Capabilities (00 f0)
+< DAP INFO | Response: SWD (00 01 01)
+
+[Step 5]
+> DAP_SWJ_Clock | Request: 1,000,000 hz (11 40 42 0f 00)
+< DAP_SWJ_Clock | Response: Success (11 00)
+
+[Step 6]
+> DAP_Connect | Request: SWD Mode (02 01)
+< DAP_SWJ_Clock | Response: Success - SWD Mode (02 01)
+
+[Step 7]
+> DAP_SWJ_Clock | Request: 1,000,000 hz (11 40 42 0f 00)
+< DAP_SWJ_Clock | Response: Success (11 00)
+
+[Step 8]
+DAP_TransferConfigure | Request:
+	 2 extra idle cycles after each transfer,
+	80 max retry count after WAIT response,
+	 0 max retry count with value mismatch,
+	(04 02 50 00 00 00)
+DAP_TransferConfigure | Response: Success (04 00)
+
+[Step 9]
+> DAP_SWD_Configure | Request:
+	1 Clock Turnaround,
+	Do not generate phase data on WAIT/FAULT,
+	(13 00)
+< DAP_SWD_Configure | Response: Success (13 00)
+
+[Step 10]
+> DAP_SWJ_Sequence | Request:
+	51 bits in sequence,
+	0xFF 0xFF 0xFF 0xFF 0xFF 0xFF 0xFF sequence data,
+	(12 33 ff ff ff ff ff ff ff)
+< DAP_SWD_Configure | Response: Success (12 00)
+
+[Step 11]
+> DAP_SWJ_Sequence | Request:
+	16 bits in sequence,
+	0x9e 0xe7 sequence data,
+	(12 10 9e e7)
+< DAP_SWD_Configure | Response: Success (12 00)
+
+[Step 12]
+> DAP_SWJ_Sequence | Request:
+	51 bits in sequence,
+	0xFF 0xFF 0xFF 0xFF 0xFF 0xFF 0xFF sequence data,
+	(12 33 ff ff ff ff ff ff ff)
+< DAP_SWD_Configure | Response: Success (12 00)
+
+[Step 13]
+> DAP_SWJ_Sequence | Request:
+	 8 bits in sequence,
+	0x00 sequence data,
+	(12 08 00)
+< DAP_SWD_Configure | Response: Success (12 00)
+
+[Step 14]
+> DAP_TransferBlock | Request:
+	0x00 DAP device index - Ignored because not applicable to SWD,
+	0x0001 [Transfer Count: 1],
+	0x02[Port: Debug, Mode: Read, Address: 0x0] Transfer Request,
+	(06 00 01 00 02)
+< DAP_TransferBlock | Response: Success
+	0x0001 [Transfer Count: 1],
+	0x01 [Transfer 0 Status: OK],
+	0x2BA01477 Transfer 0 Data,
+	(06 01 00 01 77 14 a0 2b)
+
+[Step 15]
+> DAP_Transfer | Request:
+	0x00 DAP device index - Ignored because not applicable to SWD,
+	0x04 [Transfer Count: 4],
+	0x02[Port: Debug, Mode: Read, Address: 0x0] Transfer Request,
+	(05 00 04 00 1e 00 00 00 08 00 00 00 00 04 00 0f 00 50 06)
+< DAP_Transfer | Response: Success
+	0x01 [Transfer Count: 1],
+	0x01 [Transfer 0 Status: OK],
+	0x2BA01477 Transfer 0 Data,
+	(05 04 01 00 0f 00 f0 2b)
+
+// END: Connect
