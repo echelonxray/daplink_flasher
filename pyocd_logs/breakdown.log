@@ -75,11 +75,11 @@ DAP_TransferConfigure | Response: Success (04 00)
 > DAP_TransferBlock | Request:
 	0x00 DAP device index - Ignored because not applicable to SWD,
 	0x0001 [Transfer Count: 1],
-	0x02[Port: Debug, Mode: Read, Address: 0x0] Transfer Request,
+	0x02 Transfer Request 0 [Port: Debug, Mode: Read, Address: 0x0],
 	(06 00 01 00 02)
 < DAP_TransferBlock | Response: Success
 	0x0001 [Transfer Count: 1],
-	0x01 [Transfer 0 Status: OK],
+	0x01 [Transfer Status: OK],
 	0x2BA01477 Transfer 0 Data,
 	(06 01 00 01 77 14 a0 2b)
 
@@ -87,12 +87,18 @@ DAP_TransferConfigure | Response: Success (04 00)
 > DAP_Transfer | Request:
 	0x00 DAP device index - Ignored because not applicable to SWD,
 	0x04 [Transfer Count: 4],
-	0x02[Port: Debug, Mode: Read, Address: 0x0] Transfer Request,
+	0x00 Transfer Request 0 [Port: Debug, Mode: Write, Address: 0x0, Mode: Normal, Timestamp: None],
+	0x0000001E Transfer Data 0,
+	0x08 Transfer Request 1 [Port: Debug, Mode: Write, Address: 0x2, Mode: Normal, Timestamp: None],
+	0x00000000 Transfer Data 1,
+	0x04 Transfer Request 2 [Port: Debug, Mode: Write, Address: 0x1, Mode: Normal, Timestamp: None],
+	0x50000F00 Transfer Data 2,
+	0x06 Transfer Request 3 [Port: Debug, Mode: Read, Address: 0x1, Mode: Normal, Timestamp: None],
 	(05 00 04 00 1e 00 00 00 08 00 00 00 00 04 00 0f 00 50 06)
 < DAP_Transfer | Response: Success
-	0x01 [Transfer Count: 1],
-	0x01 [Transfer 0 Status: OK],
-	0x2BA01477 Transfer 0 Data,
-	(05 04 01 00 0f 00 f0 2b)
+	0x04 [Transfer Count: 4],
+	0x01 [Transfer Status: OK],
+	0xF0000F00 Transfer 3 Data,
+	(05 04 01 00 0f 00 f0)
 
 // END: Connect
