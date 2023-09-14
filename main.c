@@ -17,8 +17,6 @@
 #define MODE_READ   0x2
 
 void talk_to_dap(libusb_device_handle* d_handle) {
-	//unsigned char data[64];
-
 	DAP_Connection dap_con;
 	dap_con.device_handle = d_handle;
 
@@ -29,14 +27,6 @@ void talk_to_dap(libusb_device_handle* d_handle) {
 		assert(retval == 0);
 		printf("Connect.\n");
 	}
-	/*
-	memset(data, 0, 64);
-	data[0] = 0x02;
-	data[1] = 0x01;
-	VERIFY_COM_RET_S(d_handle, data, 2);
-	memset(data, 0, 64);
-	VERIFY_COM_RET_R(d_handle, data, 64);
-	*/
 
 	// SWJ Sequence
 	{
@@ -48,27 +38,15 @@ void talk_to_dap(libusb_device_handle* d_handle) {
 		assert(retval == 0);
 		printf("SWJ Sequence.\n");
 	}
-	/*
-	memset(data, 0, 64);
-	data[0] = 0x12;
-	data[1] = 0x08;
-	data[2] = 0x00;
-	VERIFY_COM_RET_S(d_handle, data, 3);
-	memset(data, 0, 64);
-	VERIFY_COM_RET_R(d_handle, data, 64);
-	*/
 
 	// Transfer - Read ID register
-	//uint32_t error_stat;
 	{
 		signed int retval;
 		unsigned char transfer_request[] = {
 			0x0 | DEBUG_PORT | MODE_READ,
-			//0x4 | DEBUG_PORT | MODE_READ,
 		};
 		uint32_t transfer_buffer[] = {
 			0x00000000,
-			//0x00000000,
 		};
 		retval = dap_transfer(&dap_con,
 		                      0,
@@ -77,45 +55,7 @@ void talk_to_dap(libusb_device_handle* d_handle) {
 		                      transfer_buffer);
 		assert(retval == 0);
 		printf("Transfer - Read ID register: 0x%08X.\n", transfer_buffer[0]);
-		//printf("Transfer - Read ID register: 0x%08X.  Ctrl/Stat register: 0x%08X.\n", transfer_buffer[0], transfer_buffer[1]);
-		/*
-		error_stat = 0;
-		if (transfer_buffer[1] & 0x00000080) {
-			error_stat |= 0x08;
-		}
-		if (transfer_buffer[1] & 0x00000020) {
-			error_stat |= 0x04;
-		}
-		if (transfer_buffer[1] & 0x00000010) {
-			error_stat |= 0x02;
-		}
-		if (transfer_buffer[1] & 0x00000002) {
-			error_stat |= 0x10;
-		}
-		*/
 	}
-	/*
-	memset(data, 0, 64);
-	data[0] = 0x05;
-	data[1] = 0x00;
-	data[2] = 0x01;
-	data[3] = 0x0 | DEBUG_PORT | MODE_READ;
-	VERIFY_COM_RET_S(d_handle, data, 4);
-	memset(data, 0, 64);
-	VERIFY_COM_RET_R(d_handle, data, 64);
-	*/
-
-	// Transfer
-	/*
-	memset(data, 0, 64);
-	data[0] = 0x05;
-	data[1] = 0x00;
-	data[2] = 0x01;
-	data[3] = 0x4 | DEBUG_PORT | MODE_READ;
-	VERIFY_COM_RET_S(d_handle, data, 4);
-	memset(data, 0, 64);
-	VERIFY_COM_RET_R(d_handle, data, 64);
-	*/
 
 	// Transfer - Enable AP register access and set SELECT to 0
 	{
@@ -123,12 +63,10 @@ void talk_to_dap(libusb_device_handle* d_handle) {
 		unsigned char transfer_request[] = {
 			0x4 | DEBUG_PORT | MODE_WRITE,
 			0x8 | DEBUG_PORT | MODE_WRITE,
-			//0x0 | DEBUG_PORT | MODE_WRITE,
 		};
 		uint32_t transfer_buffer[] = {
 			0x50000000,
 			0x00000000,
-			//error_stat,
 		};
 		retval = dap_transfer(&dap_con,
 		                      0,
@@ -138,38 +76,6 @@ void talk_to_dap(libusb_device_handle* d_handle) {
 		assert(retval == 0);
 		printf("Transfer - Enable AHB-AP register access and clear the SELECT register.\n");
 	}
-	/*
-	memset(data, 0, 64);
-	data[ 0] = 0x05;
-	data[ 1] = 0x00;
-	data[ 2] = 0x02;
-	data[ 3] = 0x4 | DEBUG_PORT | MODE_WRITE;
-	data[ 4] = 0x00;
-	data[ 5] = 0x00;
-	data[ 6] = 0x00;
-	data[ 7] = 0x50;
-	data[ 8] = 0x8 | DEBUG_PORT | MODE_WRITE;
-	data[ 9] = 0x00;
-	data[10] = 0x00;
-	data[11] = 0x00;
-	data[12] = 0x00;
-	VERIFY_COM_RET_S(d_handle, data, 13);
-	memset(data, 0, 64);
-	VERIFY_COM_RET_R(d_handle, data, 64);
-	*/
-
-	// Transfer
-	/*
-	memset(data, 0, 64);
-	data[0] = 0x05;
-	data[1] = 0x00;
-	data[2] = 0x02;
-	data[3] = 0x4 | DEBUG_PORT  | MODE_READ;
-	data[4] = 0x0 | ACCESS_PORT | MODE_READ;
-	VERIFY_COM_RET_S(d_handle, data, 5);
-	memset(data, 0, 64);
-	VERIFY_COM_RET_R(d_handle, data, 64);
-	*/
 
 	// Transfer - Configure Debug SELECT register for access to the Access ID register
 	{
@@ -188,20 +94,6 @@ void talk_to_dap(libusb_device_handle* d_handle) {
 		assert(retval == 0);
 		printf("Transfer - Configure Debug SELECT register for access to the Access ID register.\n");
 	}
-	/*
-	memset(data, 0, 64);
-	data[ 0] = 0x05;
-	data[ 1] = 0x00;
-	data[ 2] = 0x01;
-	data[ 3] = 0x8 | DEBUG_PORT | MODE_WRITE;
-	data[ 4] = 0xF0;
-	data[ 5] = 0x00;
-	data[ 6] = 0x00;
-	data[ 7] = 0x00;
-	VERIFY_COM_RET_S(d_handle, data, 8);
-	memset(data, 0, 64);
-	VERIFY_COM_RET_R(d_handle, data, 64);
-	*/
 
 	// Transfer - Read Access ID register
 	{
@@ -220,16 +112,6 @@ void talk_to_dap(libusb_device_handle* d_handle) {
 		assert(retval == 0);
 		printf("Transfer - Read Access ID register: 0x%08X.\n", transfer_buffer[0]);
 	}
-	/*
-	memset(data, 0, 64);
-	data[0] = 0x05;
-	data[1] = 0x00;
-	data[2] = 0x01;
-	data[3] = 0xC | ACCESS_PORT | MODE_READ;
-	VERIFY_COM_RET_S(d_handle, data, 4);
-	memset(data, 0, 64);
-	VERIFY_COM_RET_R(d_handle, data, 64);
-	*/
 
 	// Transfer - Clear Debug SELECT register for access to the normal Access registers
 	{
@@ -248,20 +130,6 @@ void talk_to_dap(libusb_device_handle* d_handle) {
 		assert(retval == 0);
 		printf("Transfer - Clear Debug SELECT register for access to the normal Access registers.\n");
 	}
-	/*
-	memset(data, 0, 64);
-	data[ 0] = 0x05;
-	data[ 1] = 0x00;
-	data[ 2] = 0x01;
-	data[ 3] = 0x8 | DEBUG_PORT | MODE_WRITE;
-	data[ 4] = 0x00;
-	data[ 5] = 0x00;
-	data[ 6] = 0x00;
-	data[ 7] = 0x00;
-	VERIFY_COM_RET_S(d_handle, data, 8);
-	memset(data, 0, 64);
-	VERIFY_COM_RET_R(d_handle, data, 64);
-	*/
 
 	// Transfer - Set memory access mode to 32-bit.  Set memory address to 4-byte auto increment.  Set memory address to 0x10030000.
 	{
@@ -282,50 +150,6 @@ void talk_to_dap(libusb_device_handle* d_handle) {
 		assert(retval == 0);
 		printf("Transfer - Set memory access mode to 32-bit.  Set memory address to 4-byte auto increment.  Set memory address to 0x10030000.\n");
 	}
-	/*
-	memset(data, 0, 64);
-	data[ 0] = 0x05;
-	data[ 1] = 0x00;
-	data[ 2] = 0x02;
-	data[ 3] = 0x0 | ACCESS_PORT | MODE_WRITE;
-	data[ 4] = 0x22;
-	data[ 5] = 0x00;
-	data[ 6] = 0x00;
-	data[ 7] = 0x00;
-	data[ 8] = 0x4 | ACCESS_PORT | MODE_WRITE;
-	data[ 9] = 0x00;
-	data[10] = 0x00;
-	data[11] = 0x03;
-	data[12] = 0x10;
-	VERIFY_COM_RET_S(d_handle, data, 13);
-	memset(data, 0, 64);
-	VERIFY_COM_RET_R(d_handle, data, 64);
-	*/
-
-	// Transfer
-	/*
-	memset(data, 0, 64);
-	data[ 0] = 0x05;
-	data[ 1] = 0x00;
-	data[ 2] = 0x01;
-	data[ 3] = 0x0 | ACCESS_PORT | MODE_READ;
-	VERIFY_COM_RET_S(d_handle, data, 4);
-	memset(data, 0, 64);
-	VERIFY_COM_RET_R(d_handle, data, 64);
-	*/
-
-	// Transfer
-	/*
-	memset(data, 0, 64);
-	data[ 0] = 0x05;
-	data[ 1] = 0x00;
-	data[ 2] = 0x02;
-	data[ 3] = 0xC | ACCESS_PORT | MODE_READ;
-	data[ 4] = 0x4 | ACCESS_PORT | MODE_READ;
-	VERIFY_COM_RET_S(d_handle, data, 5);
-	memset(data, 0, 64);
-	VERIFY_COM_RET_R(d_handle, data, 64);
-	*/
 
 	// Transfer - Read a 32-bit value from memory
 	{
@@ -352,13 +176,6 @@ void talk_to_dap(libusb_device_handle* d_handle) {
 		assert(retval == 0);
 		printf("Disconnect.\n");
 	}
-	/*
-	memset(data, 0, 64);
-	data[0] = 0x03;
-	VERIFY_COM_RET_S(d_handle, data, 1);
-	memset(data, 0, 64);
-	VERIFY_COM_RET_R(d_handle, data, 64);
-	*/
 
 	return;
 }

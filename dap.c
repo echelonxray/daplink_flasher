@@ -235,22 +235,3 @@ signed int dap_swj_sequence(DAP_Connection* dap_con, unsigned int bit_count, uns
 
 	return 0;
 }
-
-/*
-#define VERIFY_COM_RET_S(arg1, arg2, arg3) \
-	{ \
-		int retval; \
-		retval = send_data(arg1, arg2, arg3); \
-		assert(retval >= 0); \
-		printf("Sent %d bytes via control transfer:\n", retval); \
-		print_bytes(data, retval); \
-	}
-#define VERIFY_COM_RET_R(arg1, arg2, arg3) \
-	{ \
-		int retval; \
-		retval = receive_data(arg1, arg2, arg3); \
-		assert(retval >= 0); \
-		printf("Received %d bytes via control transfer:\n", retval); \
-		print_bytes(data, retval); \
-	}
-*/
