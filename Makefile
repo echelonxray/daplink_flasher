@@ -14,6 +14,8 @@ TAG           :=
 
 GFILES        :=
 GFILES        := $(GFILES) main.o
+GFILES        := $(GFILES) dap.o
+GFILES        := $(GFILES) link.o
 
 # What list of base filenames are we to build?
 FILES_BASE    := $(basename $(GFILES))
