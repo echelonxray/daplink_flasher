@@ -3,6 +3,6 @@
 /daplink_flasher.static
 /daplink_flasher.static.strip
 
-/main.d
+/*.d
 
-/main.o
+/*.o
