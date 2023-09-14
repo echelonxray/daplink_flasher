@@ -59,7 +59,7 @@ void talk_to_dap(libusb_device_handle* d_handle) {
 	*/
 
 	// Transfer - Read ID register
-	uint32_t error_stat;
+	//uint32_t error_stat;
 	{
 		signed int retval;
 		unsigned char transfer_request[] = {
@@ -78,6 +78,7 @@ void talk_to_dap(libusb_device_handle* d_handle) {
 		assert(retval == 0);
 		printf("Transfer - Read ID register: 0x%08X.\n", transfer_buffer[0]);
 		//printf("Transfer - Read ID register: 0x%08X.  Ctrl/Stat register: 0x%08X.\n", transfer_buffer[0], transfer_buffer[1]);
+		/*
 		error_stat = 0;
 		if (transfer_buffer[1] & 0x00000080) {
 			error_stat |= 0x08;
@@ -91,6 +92,7 @@ void talk_to_dap(libusb_device_handle* d_handle) {
 		if (transfer_buffer[1] & 0x00000002) {
 			error_stat |= 0x10;
 		}
+		*/
 	}
 	/*
 	memset(data, 0, 64);
