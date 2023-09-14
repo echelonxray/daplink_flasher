@@ -129,6 +129,124 @@ void talk_to_dap(libusb_device_handle* d_handle) {
 	memset(data, 0, 64);
 	VERIFY_COM_RET_R(d_handle, data, 64);
 
+	// Transfer
+	memset(data, 0, 64);
+	data[0] = 0x05;
+	data[1] = 0x00;
+	data[2] = 0x01;
+	data[3] = 0x4 | DEBUG_PORT | MODE_READ;
+	VERIFY_COM_RET_S(d_handle, data, 4);
+	memset(data, 0, 64);
+	VERIFY_COM_RET_R(d_handle, data, 64);
+
+	// Transfer
+	memset(data, 0, 64);
+	data[ 0] = 0x05;
+	data[ 1] = 0x00;
+	data[ 2] = 0x02;
+	data[ 3] = 0x4 | DEBUG_PORT | MODE_WRITE;
+	data[ 4] = 0x00;
+	data[ 5] = 0x00;
+	data[ 6] = 0x00;
+	data[ 7] = 0x50;
+	data[ 8] = 0x8 | DEBUG_PORT | MODE_WRITE;
+	data[ 9] = 0x00;
+	data[10] = 0x00;
+	data[11] = 0x00;
+	data[12] = 0x00;
+	VERIFY_COM_RET_S(d_handle, data, 13);
+	memset(data, 0, 64);
+	VERIFY_COM_RET_R(d_handle, data, 64);
+
+	// Transfer
+	memset(data, 0, 64);
+	data[0] = 0x05;
+	data[1] = 0x00;
+	data[2] = 0x02;
+	data[3] = 0x4 | DEBUG_PORT  | MODE_READ;
+	data[4] = 0x0 | ACCESS_PORT | MODE_READ;
+	VERIFY_COM_RET_S(d_handle, data, 5);
+	memset(data, 0, 64);
+	VERIFY_COM_RET_R(d_handle, data, 64);
+
+	// Transfer
+	memset(data, 0, 64);
+	data[ 0] = 0x05;
+	data[ 1] = 0x00;
+	data[ 2] = 0x01;
+	data[ 3] = 0x8 | DEBUG_PORT | MODE_WRITE;
+	data[ 4] = 0xF0;
+	data[ 5] = 0x00;
+	data[ 6] = 0x00;
+	data[ 7] = 0x00;
+	VERIFY_COM_RET_S(d_handle, data, 8);
+	memset(data, 0, 64);
+	VERIFY_COM_RET_R(d_handle, data, 64);
+
+	// Transfer
+	memset(data, 0, 64);
+	data[0] = 0x05;
+	data[1] = 0x00;
+	data[2] = 0x01;
+	data[3] = 0xC | ACCESS_PORT | MODE_READ;
+	VERIFY_COM_RET_S(d_handle, data, 4);
+	memset(data, 0, 64);
+	VERIFY_COM_RET_R(d_handle, data, 64);
+
+	// Transfer
+	memset(data, 0, 64);
+	data[ 0] = 0x05;
+	data[ 1] = 0x00;
+	data[ 2] = 0x01;
+	data[ 3] = 0x8 | DEBUG_PORT | MODE_WRITE;
+	data[ 4] = 0x00;
+	data[ 5] = 0x00;
+	data[ 6] = 0x00;
+	data[ 7] = 0x00;
+	VERIFY_COM_RET_S(d_handle, data, 8);
+	memset(data, 0, 64);
+	VERIFY_COM_RET_R(d_handle, data, 64);
+
+	// Transfer
+	memset(data, 0, 64);
+	data[ 0] = 0x05;
+	data[ 1] = 0x00;
+	data[ 2] = 0x02;
+	data[ 3] = 0x0 | ACCESS_PORT | MODE_WRITE;
+	data[ 4] = 0x22;
+	data[ 5] = 0x00;
+	data[ 6] = 0x00;
+	data[ 7] = 0x00;
+	data[ 8] = 0x4 | ACCESS_PORT | MODE_WRITE;
+	data[ 9] = 0x00;
+	data[10] = 0x00;
+	data[11] = 0x03;
+	data[12] = 0x10;
+	VERIFY_COM_RET_S(d_handle, data, 13);
+	memset(data, 0, 64);
+	VERIFY_COM_RET_R(d_handle, data, 64);
+
+	// Transfer
+	memset(data, 0, 64);
+	data[ 0] = 0x05;
+	data[ 1] = 0x00;
+	data[ 2] = 0x01;
+	data[ 3] = 0x0 | ACCESS_PORT | MODE_READ;
+	VERIFY_COM_RET_S(d_handle, data, 4);
+	memset(data, 0, 64);
+	VERIFY_COM_RET_R(d_handle, data, 64);
+
+	// Transfer
+	memset(data, 0, 64);
+	data[ 0] = 0x05;
+	data[ 1] = 0x00;
+	data[ 2] = 0x02;
+	data[ 3] = 0xC | ACCESS_PORT | MODE_READ;
+	data[ 4] = 0x4 | ACCESS_PORT | MODE_READ;
+	VERIFY_COM_RET_S(d_handle, data, 5);
+	memset(data, 0, 64);
+	VERIFY_COM_RET_R(d_handle, data, 64);
+
 	// Disconnect
 	memset(data, 0, 64);
 	data[0] = 0x03;
