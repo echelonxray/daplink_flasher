@@ -109,7 +109,7 @@ void talk_to_dap(libusb_device_handle* d_handle) {
 	memset(data, 0, 64);
 	data[0] = 0x12;
 	data[1] = 0x08;
-	data[8] = 0x00;
+	data[2] = 0x00;
 	VERIFY_COM_RET_S(d_handle, data, 3);
 	memset(data, 0, 64);
 	VERIFY_COM_RET_R(d_handle, data, 64);
