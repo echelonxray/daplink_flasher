@@ -77,6 +77,11 @@ ssize_t receive_data(libusb_device_handle* d_handle, unsigned char* data, size_t
 	return retval;
 }
 
+#define DEBUG_PORT  0x0
+#define ACCESS_PORT 0x1
+#define MODE_WRITE  0x0
+#define MODE_READ   0x2
+
 #define VERIFY_COM_RET_S(arg1, arg2, arg3) \
 	{ \
 		int retval; \
@@ -119,7 +124,7 @@ void talk_to_dap(libusb_device_handle* d_handle) {
 	data[0] = 0x05;
 	data[1] = 0x00;
 	data[2] = 0x01;
-	data[3] = 0x02 | 0x0;
+	data[3] = 0x0 | DEBUG_PORT | MODE_READ;
 	VERIFY_COM_RET_S(d_handle, data, 4);
 	memset(data, 0, 64);
 	VERIFY_COM_RET_R(d_handle, data, 64);
