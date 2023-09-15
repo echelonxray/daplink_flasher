@@ -21,11 +21,11 @@ void talk_to_dap(libusb_device_handle* d_handle) {
 	DAP_Connection* dap_con;
 
 	assert(! oper_init(&dap_con, d_handle) );
-	printf("Init\n");
+	printf("Init\n\n");
 
-	uint32_t buffer[4];
-	//uint32_t address = 0x10030000;
-	uint32_t address = 0x40029400;
+	uint32_t buffer[12];
+	uint32_t address = 0x10030000;
+	//uint32_t address = 0x40029400;
 	/*
 	for (address = 0x10030000; address < 0x10030010; address += 0x4) {
 		assert(! oper_read_mem32(dap_con, address, buffer) );
@@ -34,12 +34,34 @@ void talk_to_dap(libusb_device_handle* d_handle) {
 		printf("Read32 from 0x%08X: 0x%08X; Next addr: 0x%08X\n", address, buffer[0], tmp);
 	}
 	*/
-	/*
-	assert(! oper_read_memblock32(dap_con, address, buffer, 4) );
-	for (unsigned int i = 0; i < 4; i++) {
-		printf("Value: 0x%08X\n", buffer[i]);
+	printf("[START] Stage 1\n");
+	assert(! oper_read_memblock32(dap_con, address, buffer, 12) );
+	for (unsigned int i = 0; i < 12; i++) {
+		printf("\tValue: 0x%08X\n", buffer[i]);
 	}
-	*/
+	printf("[END] Stage 1\n\n");
+
+	printf("[START] Stage 2\n");
+	assert(! oper_erase_flash_page(dap_con, 0x10030000, 0x4000, 0x40029400) );
+	printf("[END] Stage 2\n\n");
+
+	printf("[START] Stage 3\n");
+	assert(! oper_write_to_flash_page(dap_con, 0x10030010, 0x40029400,
+	                                  0x01010101,0x23232323, 0x45454545, 0x67676767) );
+	printf("[END] Stage 3\n\n");
+
+	printf("[START] Stage 4\n");
+	assert(! oper_read_memblock32(dap_con, address, buffer, 12) );
+	for (unsigned int i = 0; i < 12; i++) {
+		printf("\tValue: 0x%08X\n", buffer[i]);
+	}
+	printf("[END] Stage 4\n\n");
+
+	//assert(! oper_read_memblock32(dap_con, address, buffer, 8) );
+	//for (unsigned int i = 0; i < 8; i++) {
+	//	printf("Value: 0x%08X\n", buffer[i]);
+	//}
+	/*
 	{
 		assert(! oper_read_mem32(dap_con, address, buffer) );
 		printf("Read32 from 0x%08X: 0x%08X\n", address, buffer[0]);
@@ -48,6 +70,7 @@ void talk_to_dap(libusb_device_handle* d_handle) {
 		assert(! oper_read_mem32(dap_con, address, buffer) );
 		printf("Read32 from 0x%08X: 0x%08X\n", address, buffer[0]);
 	}
+	*/
 
 	assert(! oper_destroy(dap_con) );
 	printf("Destroy\n");

@@ -41,6 +41,10 @@ signed int oper_read_mem32(DAP_Connection* dap_con, uint32_t address, uint32_t* 
 signed int oper_write_memblock32(DAP_Connection* dap_con, uint32_t address, uint32_t* values, uint32_t buffer_length);
 signed int oper_read_memblock32(DAP_Connection* dap_con, uint32_t address, uint32_t* buffer, uint32_t buffer_length);
 
+signed int oper_erase_flash_page(DAP_Connection* dap_con, uint32_t address, uint32_t page_size, uint32_t controller_address);
+signed int oper_write_to_flash_page(DAP_Connection* dap_con, uint32_t address, uint32_t controller_address,
+                                    uint32_t data_0, uint32_t data_1, uint32_t data_2, uint32_t data_3);
+
 signed int oper_init(DAP_Connection** dap_con, libusb_device_handle* d_handle);
 signed int oper_destroy(DAP_Connection* dap_con);
 
