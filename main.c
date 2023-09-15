@@ -23,11 +23,30 @@ void talk_to_dap(libusb_device_handle* d_handle) {
 	assert(! oper_init(&dap_con, d_handle) );
 	printf("Init\n");
 
-	unsigned int buffer;
-	unsigned int address;
+	uint32_t buffer[4];
+	//uint32_t address = 0x10030000;
+	uint32_t address = 0x40029400;
+	/*
 	for (address = 0x10030000; address < 0x10030010; address += 0x4) {
-		assert(! oper_read_mem32(dap_con, address, &buffer) );
-		printf("Read32 from 0x%08X: 0x%08X\n", address, buffer);
+		assert(! oper_read_mem32(dap_con, address, buffer) );
+		uint32_t tmp;
+		oper_read_reg(dap_con, OPER_REG_ACCESS_TAR, &tmp);
+		printf("Read32 from 0x%08X: 0x%08X; Next addr: 0x%08X\n", address, buffer[0], tmp);
+	}
+	*/
+	/*
+	assert(! oper_read_memblock32(dap_con, address, buffer, 4) );
+	for (unsigned int i = 0; i < 4; i++) {
+		printf("Value: 0x%08X\n", buffer[i]);
+	}
+	*/
+	{
+		assert(! oper_read_mem32(dap_con, address, buffer) );
+		printf("Read32 from 0x%08X: 0x%08X\n", address, buffer[0]);
+		assert(! oper_write_mem32(dap_con, address, 0x01234567) );
+		printf("Writ32 from 0x%08X: 0x%08X\n", address, 0x01234567);
+		assert(! oper_read_mem32(dap_con, address, buffer) );
+		printf("Read32 from 0x%08X: 0x%08X\n", address, buffer[0]);
 	}
 
 	assert(! oper_destroy(dap_con) );

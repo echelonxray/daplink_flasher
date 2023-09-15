@@ -3,21 +3,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#define OPER_REG_ACCESSMASK     (0x100)
-
-#define OPER_REG_DEBUG_IDCODE   (0x00)
-#define OPER_REG_DEBUG_ABORT    (0x00)
-#define OPER_REG_DEBUG_CTRLSTAT (0x04)
-#define OPER_REG_DEBUG_RESEND   (0x08)
-#define OPER_REG_DEBUG_SELECT   (0x08)
-#define OPER_REG_DEBUG_RDBUFF   (0x0C)
-
-#define OPER_REG_ACCESS_CSW     (0x00 | OPER_REG_ACCESSMASK)
-#define OPER_REG_ACCESS_TAR     (0x04 | OPER_REG_ACCESSMASK)
-#define OPER_REG_ACCESS_DRW     (0x0C | OPER_REG_ACCESSMASK)
-#define OPER_REG_ACCESS_IDR     (0xFC | OPER_REG_ACCESSMASK)
-
-signed int oper_write_reg(DAP_Connection* dap_con, unsigned int reg, unsigned int value) {
+signed int oper_write_reg(DAP_Connection* dap_con, unsigned int reg, uint32_t value) {
 	unsigned int tr_req;
 	tr_req = (reg & 0xC) | DAP_TRANSFER_MODE_WRITE;
 	if (reg & OPER_REG_ACCESSMASK) {
@@ -49,7 +35,7 @@ signed int oper_write_reg(DAP_Connection* dap_con, unsigned int reg, unsigned in
 
 	return 0;
 }
-signed int oper_read_reg(DAP_Connection* dap_con, unsigned int reg, unsigned int* buffer) {
+signed int oper_read_reg(DAP_Connection* dap_con, unsigned int reg, uint32_t* buffer) {
 	unsigned int tr_req;
 	tr_req = (reg & 0xC) | DAP_TRANSFER_MODE_READ;
 	if (reg & OPER_REG_ACCESSMASK) {
@@ -80,19 +66,134 @@ signed int oper_read_reg(DAP_Connection* dap_con, unsigned int reg, unsigned int
 	return 0;
 }
 
-signed int oper_write_mem32(DAP_Connection* dap_con, uint32_t address, uint32_t value) {
-	if (address & 0x3) {
-		printf("Error: oper_write_mem32(): Address Misaligned: 0x%08X.\n", address);
-		return -5;
+signed int oper_write_mem8(DAP_Connection* dap_con, uint32_t address, uint8_t value) {
+	// Transfer - Set 1 byte address mode.  Disable auto-increment mode.
+	{
+		signed int retval;
+		retval = oper_write_reg(dap_con, OPER_REG_ACCESS_CSW, OPER_REG_ACCESS_CSWMODE_08BITADDR |
+		                                                      OPER_REG_ACCESS_CSWMODE_NOAUTOINC);
+		assert(retval == 0);
 	}
-
 	// Transfer - Set address
 	{
 		signed int retval;
 		retval = oper_write_reg(dap_con, OPER_REG_ACCESS_TAR, address);
 		assert(retval == 0);
 	}
-	// Transfer - Write to address 
+	// Transfer - Write to address
+	{
+		signed int retval;
+		retval = oper_write_reg(dap_con, OPER_REG_ACCESS_DRW, value);
+		assert(retval == 0);
+	}
+
+	return 0;
+}
+signed int oper_read_mem8(DAP_Connection* dap_con, uint32_t address, uint8_t* buffer) {
+	// Transfer - Set 1 byte address mode.  Disable auto-increment mode.
+	{
+		signed int retval;
+		retval = oper_write_reg(dap_con, OPER_REG_ACCESS_CSW, OPER_REG_ACCESS_CSWMODE_08BITADDR |
+		                                                      OPER_REG_ACCESS_CSWMODE_NOAUTOINC);
+		assert(retval == 0);
+	}
+	// Transfer - Set address
+	{
+		signed int retval;
+		retval = oper_write_reg(dap_con, OPER_REG_ACCESS_TAR, address);
+		assert(retval == 0);
+	}
+	// Transfer - Read from address
+	{
+		signed int retval;
+		uint32_t tmp;
+		retval = oper_read_reg(dap_con, OPER_REG_ACCESS_DRW, &tmp);
+		assert(retval == 0);
+		*buffer = tmp;
+	}
+
+	return 0;
+}
+
+signed int oper_write_mem16(DAP_Connection* dap_con, uint32_t address, uint16_t value) {
+	if (address & 0x1) {
+		printf("Error: oper_write_mem32(): Address Misaligned: 0x%08X.\n", address);
+		return -5;
+	}
+
+	// Transfer - Set 2 byte address mode.  Disable auto-increment mode.
+	{
+		signed int retval;
+		retval = oper_write_reg(dap_con, OPER_REG_ACCESS_CSW, OPER_REG_ACCESS_CSWMODE_16BITADDR |
+		                                                      OPER_REG_ACCESS_CSWMODE_NOAUTOINC);
+		assert(retval == 0);
+	}
+	// Transfer - Set address
+	{
+		signed int retval;
+		retval = oper_write_reg(dap_con, OPER_REG_ACCESS_TAR, address);
+		assert(retval == 0);
+	}
+	// Transfer - Write to address
+	{
+		signed int retval;
+		retval = oper_write_reg(dap_con, OPER_REG_ACCESS_DRW, value);
+		assert(retval == 0);
+	}
+
+	return 0;
+}
+signed int oper_read_mem16(DAP_Connection* dap_con, uint32_t address, uint16_t* buffer) {
+	if (address & 0x1) {
+		printf("Error: oper_read_mem32(): Address Misaligned: 0x%08X.\n", address);
+		return -5;
+	}
+
+	// Transfer - Set 2 byte address mode.  Disable auto-increment mode.
+	{
+		signed int retval;
+		retval = oper_write_reg(dap_con, OPER_REG_ACCESS_CSW, OPER_REG_ACCESS_CSWMODE_16BITADDR |
+		                                                      OPER_REG_ACCESS_CSWMODE_NOAUTOINC);
+		assert(retval == 0);
+	}
+	// Transfer - Set address
+	{
+		signed int retval;
+		retval = oper_write_reg(dap_con, OPER_REG_ACCESS_TAR, address);
+		assert(retval == 0);
+	}
+	// Transfer - Read from address
+	{
+		signed int retval;
+		uint32_t tmp;
+		retval = oper_read_reg(dap_con, OPER_REG_ACCESS_DRW, &tmp);
+		assert(retval == 0);
+		*buffer = tmp;
+	}
+
+	return 0;
+}
+
+signed int oper_write_mem32(DAP_Connection* dap_con, uint32_t address, uint32_t value) {
+	if (address & 0x3) {
+		printf("Error: oper_write_mem32(): Address Misaligned: 0x%08X.\n", address);
+		return -5;
+	}
+
+	// Transfer - Set 4 byte address mode.  Disable auto-increment mode.
+	{
+		signed int retval;
+		retval = oper_write_reg(dap_con, OPER_REG_ACCESS_CSW, OPER_REG_ACCESS_CSWMODE_32BITADDR |
+		                                                      OPER_REG_ACCESS_CSWMODE_NOAUTOINC);
+		assert(retval == 0);
+	}
+	// Transfer - Set address
+	{
+		signed int retval;
+		retval = oper_write_reg(dap_con, OPER_REG_ACCESS_TAR, address);
+		assert(retval == 0);
+	}
+	// Transfer - Write to address
 	{
 		signed int retval;
 		retval = oper_write_reg(dap_con, OPER_REG_ACCESS_DRW, value);
@@ -107,16 +208,23 @@ signed int oper_read_mem32(DAP_Connection* dap_con, uint32_t address, uint32_t* 
 		return -5;
 	}
 
+	// Transfer - Set 4 byte address mode.  Disable auto-increment mode.
+	{
+		signed int retval;
+		retval = oper_write_reg(dap_con, OPER_REG_ACCESS_CSW, OPER_REG_ACCESS_CSWMODE_32BITADDR |
+		                                                      OPER_REG_ACCESS_CSWMODE_NOAUTOINC);
+		assert(retval == 0);
+	}
 	// Transfer - Set address
 	{
 		signed int retval;
 		retval = oper_write_reg(dap_con, OPER_REG_ACCESS_TAR, address);
 		assert(retval == 0);
 	}
-	// Transfer - Read from address 
+	// Transfer - Read from address
 	{
 		signed int retval;
-		unsigned int tmp;
+		uint32_t tmp;
 		retval = oper_read_reg(dap_con, OPER_REG_ACCESS_DRW, &tmp);
 		assert(retval == 0);
 		*buffer = tmp;
@@ -124,6 +232,85 @@ signed int oper_read_mem32(DAP_Connection* dap_con, uint32_t address, uint32_t* 
 
 	return 0;
 }
+
+signed int oper_write_memblock32(DAP_Connection* dap_con, uint32_t address, uint32_t* values, uint32_t buffer_length) {
+	if (address & 0x3) {
+		printf("Error: oper_write_memblock32(): Address Misaligned: 0x%08X.\n", address);
+		return -5;
+	}
+
+	// Transfer - Set 4 byte address mode.  Enable auto-increment mode.
+	{
+		signed int retval;
+		retval = oper_write_reg(dap_con, OPER_REG_ACCESS_CSW, OPER_REG_ACCESS_CSWMODE_32BITADDR |
+		                                                      OPER_REG_ACCESS_CSWMODE_AUTOINC);
+		assert(retval == 0);
+	}
+	// Transfer - Set address
+	{
+		signed int retval;
+		retval = oper_write_reg(dap_con, OPER_REG_ACCESS_TAR, address);
+		assert(retval == 0);
+	}
+	// Transfer - Write to address
+	for (uint32_t i = 0; i < buffer_length; i++) {
+		signed int retval;
+		retval = oper_write_reg(dap_con, OPER_REG_ACCESS_DRW, values[i]);
+		assert(retval == 0);
+	}
+
+	return 0;
+}
+signed int oper_read_memblock32(DAP_Connection* dap_con, uint32_t address, uint32_t* buffer, uint32_t buffer_length) {
+	if (address & 0x3) {
+		printf("Error: oper_read_memblock32(): Address Misaligned: 0x%08X.\n", address);
+		return -5;
+	}
+
+	// Transfer - Set 4 byte address mode.  Enable auto-increment mode.
+	{
+		signed int retval;
+		retval = oper_write_reg(dap_con, OPER_REG_ACCESS_CSW, OPER_REG_ACCESS_CSWMODE_32BITADDR |
+		                                                      OPER_REG_ACCESS_CSWMODE_AUTOINC);
+		assert(retval == 0);
+	}
+	// Transfer - Set address
+	{
+		signed int retval;
+		retval = oper_write_reg(dap_con, OPER_REG_ACCESS_TAR, address);
+		assert(retval == 0);
+	}
+	// Transfer - Read from address
+	for (uint32_t i = 0; i < buffer_length; i++) {
+		signed int retval;
+		uint32_t tmp;
+		retval = oper_read_reg(dap_con, OPER_REG_ACCESS_DRW, &tmp);
+		assert(retval == 0);
+		buffer[i] = tmp;
+	}
+
+	return 0;
+}
+
+/*
+signed int oper_program_flash(DAP_Connection* dap_con, uint32_t address, uint8_t* buffer, uint32_t buffer_length) {
+	if (address & 0x3) {
+		printf("Error: oper_read_memblock32(): Address Misaligned: 0x%08X.\n", address);
+		return -5;
+	}
+
+	uint32_t size_of_used_pages;
+	uint32_t start_page_address;
+	uint32_t end_page_address;
+	start_page_address = address & 0x;
+	size_of_used_pages
+	void* page_backup;
+	page_backup = malloc(size_of_used_pages);
+	assert(! oper_read_memblock32(dap_con, address, page_backup, size_of_used_pages / 4) );
+
+	return 0;
+}
+*/
 
 signed int oper_init(DAP_Connection** dap_con, libusb_device_handle* d_handle) {
 	DAP_Connection* local_dap_con;
@@ -153,7 +340,7 @@ signed int oper_init(DAP_Connection** dap_con, libusb_device_handle* d_handle) {
 	// Transfer - Read ID register
 	{
 		signed int retval;
-		unsigned int buffer;
+		uint32_t buffer;
 		retval = oper_read_reg(local_dap_con, OPER_REG_DEBUG_IDCODE, &buffer);
 		assert(retval == 0);
 		printf("Transfer - Read Debug Port IDCODE register: 0x%08X.\n", buffer);
@@ -172,7 +359,7 @@ signed int oper_init(DAP_Connection** dap_con, libusb_device_handle* d_handle) {
 	// Transfer - Read ID register
 	{
 		signed int retval;
-		unsigned int buffer;
+		uint32_t buffer;
 		retval = oper_read_reg(local_dap_con, OPER_REG_ACCESS_IDR, &buffer);
 		assert(retval == 0);
 		printf("Transfer - Read Access Port IDR register: 0x%08X.\n", buffer);
