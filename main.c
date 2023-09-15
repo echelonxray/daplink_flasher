@@ -41,14 +41,18 @@ void talk_to_dap(libusb_device_handle* d_handle) {
 	}
 	printf("[END] Stage 1\n\n");
 
-	printf("[START] Stage 2\n");
-	assert(! oper_erase_flash_page(dap_con, 0x10030000, 0x4000, 0x40029400) );
-	printf("[END] Stage 2\n\n");
+	if (0) {
+		printf("[START] Stage 2\n");
+		assert(! oper_erase_flash_page(dap_con, 0x10030000, 0x4000, 0x40029000) );
+		printf("[END] Stage 2\n\n");
+	}
 
-	printf("[START] Stage 3\n");
-	assert(! oper_write_to_flash_page(dap_con, 0x10030010, 0x40029400,
-	                                  0x01010101,0x23232323, 0x45454545, 0x67676767) );
-	printf("[END] Stage 3\n\n");
+	if (0) {
+		printf("[START] Stage 3\n");
+		assert(! oper_write_to_flash_page(dap_con, 0x10030000, 0x40029000,
+		                                  0x01234567, 0x89ABCDEF,0xDEADF33D, 0xB16B00B5) );
+		printf("[END] Stage 3\n\n");
+	}
 
 	printf("[START] Stage 4\n");
 	assert(! oper_read_memblock32(dap_con, address, buffer, 12) );

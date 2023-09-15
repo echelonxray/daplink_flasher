@@ -497,6 +497,10 @@ signed int oper_init(DAP_Connection** dap_con, libusb_device_handle* d_handle) {
 		printf("Transfer - Read Access Port IDR register: 0x%08X.\n", buffer);
 	}
 
+	// TODO: Check SOC Model
+	// TODO: Reset and Half
+	// TODO: Configure Clock
+
 	*dap_con = local_dap_con;
 
 	return 0;
