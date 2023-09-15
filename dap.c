@@ -2,7 +2,7 @@
 
 #include "link.h"
 #include <stdio.h>
-#include <string.h>
+//#include <string.h>
 
 #define LINK_BUFFER_LENGTH 64
 
@@ -10,7 +10,7 @@ signed int dap_info(DAP_Connection* dap_con, unsigned int id) {
 	unsigned char data[LINK_BUFFER_LENGTH];
 	signed int retval;
 
-	memset(data, 0, LINK_BUFFER_LENGTH);
+	//memset(data, 0, LINK_BUFFER_LENGTH);
 	data[0] = DAP_INFO;
 	data[1] = id;
 
@@ -44,7 +44,7 @@ signed int dap_connect(DAP_Connection* dap_con, unsigned int mode) {
 	unsigned char data[LINK_BUFFER_LENGTH];
 	signed int retval;
 
-	memset(data, 0, LINK_BUFFER_LENGTH);
+	//memset(data, 0, LINK_BUFFER_LENGTH);
 	data[0] = DAP_CONNECT;
 	data[1] = mode;
 
@@ -81,7 +81,7 @@ signed int dap_disconnect(DAP_Connection* dap_con) {
 	unsigned char data[LINK_BUFFER_LENGTH];
 	signed int retval;
 
-	memset(data, 0, LINK_BUFFER_LENGTH);
+	//memset(data, 0, LINK_BUFFER_LENGTH);
 	data[0] = DAP_DISCONNECT;
 
 	retval = link_send_data(dap_con->device_handle, data, 1);
@@ -114,7 +114,7 @@ signed int dap_transfer(DAP_Connection* dap_con, unsigned int dap_index, unsigne
 	unsigned int j;
 	unsigned int k;
 
-	memset(data, 0, LINK_BUFFER_LENGTH);
+	//memset(data, 0, LINK_BUFFER_LENGTH);
 	data[0] = DAP_TRANSFER;
 	data[1] = dap_index;
 	data[2] = transfer_count;
@@ -201,7 +201,7 @@ signed int dap_swj_sequence(DAP_Connection* dap_con, unsigned int bit_count, uns
 	signed int retval;
 	unsigned int i;
 
-	memset(data, 0, LINK_BUFFER_LENGTH);
+	//memset(data, 0, LINK_BUFFER_LENGTH);
 	data[0] = DAP_SWJ_SEQUENCE;
 	data[1] = bit_count;
 	for (i = 0; i < data_buffer_length; i++) {
