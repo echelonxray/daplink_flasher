@@ -14,6 +14,7 @@ TAG           :=
 
 GFILES        :=
 GFILES        := $(GFILES) main.o
+GFILES        := $(GFILES) operations.o
 GFILES        := $(GFILES) dap.o
 GFILES        := $(GFILES) link.o
 

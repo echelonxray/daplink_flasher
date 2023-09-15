@@ -1,4 +1,5 @@
 #include "dap.h"
+#include "operations.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -17,165 +18,20 @@
 #define MODE_READ   0x2
 
 void talk_to_dap(libusb_device_handle* d_handle) {
-	DAP_Connection dap_con;
-	dap_con.device_handle = d_handle;
+	DAP_Connection* dap_con;
 
-	// Connect
-	{
-		signed int retval;
-		retval = dap_connect(&dap_con, DAP_CONNECT_PORT_MODE_SWD);
-		assert(retval == 0);
-		printf("Connect.\n");
+	assert(! oper_init(&dap_con, d_handle) );
+	printf("Init\n");
+
+	unsigned int buffer;
+	unsigned int address;
+	for (address = 0x10030000; address < 0x10030010; address += 0x4) {
+		assert(! oper_read_mem32(dap_con, address, &buffer) );
+		printf("Read32 from 0x%08X: 0x%08X\n", address, buffer);
 	}
 
-	// SWJ Sequence
-	{
-		signed int retval;
-		unsigned char sequence[] = {
-			0x00,
-		};
-		retval = dap_swj_sequence(&dap_con, 0x08, sequence, sizeof(sequence) / sizeof(*sequence));
-		assert(retval == 0);
-		printf("SWJ Sequence.\n");
-	}
-
-	// Transfer - Read ID register
-	{
-		signed int retval;
-		unsigned char transfer_request[] = {
-			0x0 | DEBUG_PORT | MODE_READ,
-		};
-		uint32_t transfer_buffer[] = {
-			0x00000000,
-		};
-		retval = dap_transfer(&dap_con,
-		                      0,
-		                      sizeof(transfer_request) / sizeof(*transfer_request),
-		                      transfer_request,
-		                      transfer_buffer);
-		assert(retval == 0);
-		printf("Transfer - Read ID register: 0x%08X.\n", transfer_buffer[0]);
-	}
-
-	// Transfer - Enable AP register access and set SELECT to 0
-	{
-		signed int retval;
-		unsigned char transfer_request[] = {
-			0x4 | DEBUG_PORT | MODE_WRITE,
-			0x8 | DEBUG_PORT | MODE_WRITE,
-		};
-		uint32_t transfer_buffer[] = {
-			0x50000000,
-			0x00000000,
-		};
-		retval = dap_transfer(&dap_con,
-		                      0,
-		                      sizeof(transfer_request) / sizeof(*transfer_request),
-		                      transfer_request,
-		                      transfer_buffer);
-		assert(retval == 0);
-		printf("Transfer - Enable AHB-AP register access and clear the SELECT register.\n");
-	}
-
-	// Transfer - Configure Debug SELECT register for access to the Access ID register
-	{
-		signed int retval;
-		unsigned char transfer_request[] = {
-			0x8 | DEBUG_PORT | MODE_WRITE,
-		};
-		uint32_t transfer_buffer[] = {
-			0x000000F0,
-		};
-		retval = dap_transfer(&dap_con,
-		                      0,
-		                      sizeof(transfer_request) / sizeof(*transfer_request),
-		                      transfer_request,
-		                      transfer_buffer);
-		assert(retval == 0);
-		printf("Transfer - Configure Debug SELECT register for access to the Access ID register.\n");
-	}
-
-	// Transfer - Read Access ID register
-	{
-		signed int retval;
-		unsigned char transfer_request[] = {
-			0xC | ACCESS_PORT | MODE_READ,
-		};
-		uint32_t transfer_buffer[] = {
-			0x00000000,
-		};
-		retval = dap_transfer(&dap_con,
-		                      0,
-		                      sizeof(transfer_request) / sizeof(*transfer_request),
-		                      transfer_request,
-		                      transfer_buffer);
-		assert(retval == 0);
-		printf("Transfer - Read Access ID register: 0x%08X.\n", transfer_buffer[0]);
-	}
-
-	// Transfer - Clear Debug SELECT register for access to the normal Access registers
-	{
-		signed int retval;
-		unsigned char transfer_request[] = {
-			0x8 | DEBUG_PORT | MODE_WRITE,
-		};
-		uint32_t transfer_buffer[] = {
-			0x00000000,
-		};
-		retval = dap_transfer(&dap_con,
-		                      0,
-		                      sizeof(transfer_request) / sizeof(*transfer_request),
-		                      transfer_request,
-		                      transfer_buffer);
-		assert(retval == 0);
-		printf("Transfer - Clear Debug SELECT register for access to the normal Access registers.\n");
-	}
-
-	// Transfer - Set memory access mode to 32-bit.  Set memory address to 4-byte auto increment.  Set memory address to 0x10030000.
-	{
-		signed int retval;
-		unsigned char transfer_request[] = {
-			0x0 | ACCESS_PORT | MODE_WRITE,
-			0x4 | ACCESS_PORT | MODE_WRITE,
-		};
-		uint32_t transfer_buffer[] = {
-			0x00000022,
-			0x10030000,
-		};
-		retval = dap_transfer(&dap_con,
-		                      0,
-		                      sizeof(transfer_request) / sizeof(*transfer_request),
-		                      transfer_request,
-		                      transfer_buffer);
-		assert(retval == 0);
-		printf("Transfer - Set memory access mode to 32-bit.  Set memory address to 4-byte auto increment.  Set memory address to 0x10030000.\n");
-	}
-
-	// Transfer - Read a 32-bit value from memory
-	{
-		signed int retval;
-		unsigned char transfer_request[] = {
-			0xC | ACCESS_PORT | MODE_READ,
-		};
-		uint32_t transfer_buffer[] = {
-			0x00000000,
-		};
-		retval = dap_transfer(&dap_con,
-		                      0,
-		                      sizeof(transfer_request) / sizeof(*transfer_request),
-		                      transfer_request,
-		                      transfer_buffer);
-		assert(retval == 0);
-		printf("Transfer - Read a 32-bit value from memory: 0x%08X.\n", transfer_buffer[0]);
-	}
-
-	// Disconnect
-	{
-		signed int retval;
-		retval = dap_disconnect(&dap_con);
-		assert(retval == 0);
-		printf("Disconnect.\n");
-	}
+	assert(! oper_destroy(dap_con) );
+	printf("Destroy\n");
 
 	return;
 }

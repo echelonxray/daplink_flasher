@@ -5,6 +5,7 @@
 
 typedef struct {
 	void* device_handle;
+	unsigned int sel_addr;
 } DAP_Connection;
 
 #define DAP_STATUS_OK    0x00
@@ -40,6 +41,10 @@ typedef struct {
 #define DAP_SWJ_SEQUENCE 0x12
 
 #define DAP_TRANSFER 0x05
+#define DAP_TRANSFER_DEBUG_PORT  0x0
+#define DAP_TRANSFER_ACCESS_PORT 0x1
+#define DAP_TRANSFER_MODE_WRITE  0x0
+#define DAP_TRANSFER_MODE_READ   0x2
 
 signed int dap_info(DAP_Connection* dap_con, unsigned int id);
 signed int dap_connect(DAP_Connection* dap_con, unsigned int mode);

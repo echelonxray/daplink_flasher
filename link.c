@@ -1,10 +1,10 @@
 #include "link.h"
 
-#include <stdio.h>
-#include <string.h>
-//#include <linux/hiddev.h>
+//#include <stdio.h>
+//#include <string.h>
 #include <libusb-1.0/libusb.h>
 
+/*
 void link_print_bytes(unsigned char* data, unsigned int length) {
 	unsigned int i = 0;
 	while (i < length) {
@@ -41,6 +41,7 @@ void link_print_bytes(unsigned char* data, unsigned int length) {
 	}
 	return;
 }
+*/
 
 signed int link_send_data(void* device_handle, unsigned char* data, unsigned int length) {
 	libusb_device_handle* d_handle;
