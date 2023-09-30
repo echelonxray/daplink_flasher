@@ -1,5 +1,7 @@
+#include "main.h"
 #include "dap.h"
 #include "operations.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -20,75 +22,14 @@
 void talk_to_dap(libusb_device_handle* d_handle) {
 	DAP_Connection* dap_con;
 
-	printf("Init...");
+	dprintf(STDOUT, "START: Init Connection\n");
 	assert(! oper_init(&dap_con, d_handle) );
-	printf("Done\n\n");
+	dprintf(STDOUT, "END: Init Connection\n");
 
-	/*
-	uint32_t buffer[12];
-	uint32_t address = 0x10030000;
-	*/
-	//uint32_t address = 0x40029400;
-	/*
-	for (address = 0x10030000; address < 0x10030010; address += 0x4) {
-		assert(! oper_read_mem32(dap_con, address, buffer) );
-		uint32_t tmp;
-		oper_read_reg(dap_con, OPER_REG_ACCESS_TAR, &tmp);
-		printf("Read32 from 0x%08X: 0x%08X; Next addr: 0x%08X\n", address, buffer[0], tmp);
-	}
-	*/
-	/*
-	printf("[START] Stage 1\n");
-	assert(! oper_read_memblock32(dap_con, address, buffer, 12) );
-	for (unsigned int i = 0; i < 12; i++) {
-		printf("\tValue: 0x%08X\n", buffer[i]);
-	}
-	printf("[END] Stage 1\n\n");
-
-	if (0) {
-		printf("[START] Stage 2\n");
-		assert(! oper_erase_flash_page(dap_con, 0x10030000, 0x4000, 0x40029000) );
-		printf("[END] Stage 2\n\n");
-	}
-
-	if (0) {
-		printf("[START] Stage 3\n");
-		assert(! oper_write_to_flash_page(dap_con, 0x10030000, 0x40029000,
-		                                  0x01234567, 0x89ABCDEF,0xDEADF33D, 0xB16B00B5) );
-		printf("[END] Stage 3\n\n");
-	}
-
-	printf("[START] Stage 4\n");
-	assert(! oper_read_memblock32(dap_con, address, buffer, 12) );
-	for (unsigned int i = 0; i < 12; i++) {
-		printf("\tValue: 0x%08X\n", buffer[i]);
-	}
-	printf("[END] Stage 4\n\n");
-	*/
-
-	//assert(! oper_read_memblock32(dap_con, address, buffer, 8) );
-	//for (unsigned int i = 0; i < 8; i++) {
-	//	printf("Value: 0x%08X\n", buffer[i]);
-	//}
-	/*
-	{
-		assert(! oper_read_mem32(dap_con, address, buffer) );
-		printf("Read32 from 0x%08X: 0x%08X\n", address, buffer[0]);
-		assert(! oper_write_mem32(dap_con, address, 0x01234567) );
-		printf("Writ32 from 0x%08X: 0x%08X\n", address, 0x01234567);
-		assert(! oper_read_mem32(dap_con, address, buffer) );
-		printf("Read32 from 0x%08X: 0x%08X\n", address, buffer[0]);
-	}
-	*/
-
-	printf("Reset (Halt == True)...");
-	oper_reset(dap_con, 1);
-	printf("Done\n");
-
-	printf("\n");
-	printf("Destroy...");
+	dprintf(STDOUT, "\n");
+	dprintf(STDOUT, "START: Destroy Connection\n");
 	assert(! oper_destroy(dap_con) );
-	printf("Done\n");
+	dprintf(STDOUT, "END: Destroy Connection\n");
 
 	return;
 }
