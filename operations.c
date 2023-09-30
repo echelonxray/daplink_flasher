@@ -25,6 +25,29 @@
 #define FLCn_WELR5  0xA8
 #define FLCn_RLR5   0xAC
 
+#define GCR_ROOTADDR 0x40000000
+#define GCR_SYSCTRL        0x00
+#define GCR_RST0           0x04
+#define GCR_CLKCTRL        0x08
+#define GCR_PM             0x0C
+#define GCR_PCLKDIV        0x18
+#define GCR_PCLKDIS0       0x24
+#define GCR_MEMCTRL        0x28
+#define GCR_MEMZ           0x2C
+#define GCR_SYSST          0x40
+#define GCR_RST1           0x44
+#define GCR_PCLKDIS1       0x48
+#define GCR_EVENTEN        0x4C
+#define GCR_REVISION       0x50
+#define GCR_SYSIE          0x54
+#define GCR_ECCERR         0x64
+#define GCR_ECCCED         0x68
+#define GCR_ECCIE          0x6C
+#define GCR_ECCADDR        0x70
+#define GCR_BTLELDOCTRL    0x74
+#define GCR_BTLELDODLY     0x78
+#define GCR_GPR0           0x80
+
 signed int oper_write_reg(DAP_Connection* dap_con, unsigned int reg, uint32_t value) {
 	unsigned int tr_req;
 	tr_req = (reg & 0xC) | DAP_TRANSFER_MODE_WRITE;
@@ -334,7 +357,7 @@ signed int oper_erase_flash_page(DAP_Connection* dap_con, uint32_t address, uint
 		} while (tmp0 & 0x01000000);
 	}
 
-	oper_write_mem32(dap_con, controller_address + FLCn_CLKDIV, 0x00000078); // Reset Clock Divisor.  (Expects 120Mhz SYS_CLK)
+	oper_write_mem32(dap_con, controller_address + FLCn_CLKDIV, 0x0000003C); // Reset Clock Divisor.  (Expects 60Mhz SYS_CLK)
 	oper_write_mem32(dap_con, controller_address + FLCn_ADDR,   address);    // Set which page to erase.
 	oper_write_mem32(dap_con, controller_address + FLCn_CTRL,   0x20005500); // Unlock flash.  Set erase mode: page.
 	oper_write_mem32(dap_con, controller_address + FLCn_CTRL,   0x20005504); // Start erase operation.
@@ -386,7 +409,7 @@ signed int oper_write_to_flash_page(DAP_Connection* dap_con, uint32_t address, u
 		} while (tmp0 & 0x01000000);
 	}
 
-	oper_write_mem32(dap_con, controller_address + FLCn_CLKDIV, 0x00000078); // Reset Clock Divisor.  (Expects 120Mhz SYS_CLK)
+	oper_write_mem32(dap_con, controller_address + FLCn_CLKDIV, 0x0000003C); // Reset Clock Divisor.  (Expects 60Mhz SYS_CLK)
 	oper_write_mem32(dap_con, controller_address + FLCn_ADDR,   address);    // Set the address to write to.
 	oper_write_mem32(dap_con, controller_address + FLCn_DATA_0, data_0);     // Set part 1/4 of the data to write.
 	oper_write_mem32(dap_con, controller_address + FLCn_DATA_1, data_1);     // Set part 2/4 of the data to write.
@@ -517,14 +540,53 @@ signed int oper_init(DAP_Connection** dap_con, libusb_device_handle* d_handle) {
 	}
 
 	// TODO: Check SOC Model
-	// TODO: Reset and Halt
-	// TODO: Configure Clock
+
+	// Reset and Halt
+	oper_reset(local_dap_con, 1);
+
+	// Configure Clock - Set to 60Mhz internal oscillator (ISO)
+	{
+		uint32_t buffer;
+		signed int retval;
+
+		// Get GCR_CLKCTRL value
+		retval = oper_read_mem32(local_dap_con, GCR_ROOTADDR + GCR_CLKCTRL, &buffer);
+		assert(retval == 0);
+
+		// Ensure the 60Mhz oscillator (ISO) is enabled
+		buffer &= 0x3F3F2FC0; // Remove reserved bits.
+		buffer |= 0x00040000; // Set the 60Mhz oscillator (ISO) enable bit.
+		retval = oper_write_mem32(local_dap_con, GCR_ROOTADDR + GCR_CLKCTRL, buffer);
+		assert(retval == 0);
+
+		// Wait for the the 60 MHz oscillator to be ready and get new value for GCR_CLKCTRL
+		do {
+			retval = oper_read_mem32(local_dap_con, GCR_ROOTADDR + GCR_CLKCTRL, &buffer);
+			assert(retval == 0);
+		} while (buffer & (1 << 26));
+
+		// Set the the 60Mhz oscillator to SYS_OSC
+		buffer &= 0x3F3F2FC0; // Remove reserved bits.
+		buffer &= 0xFFFFFF3F; // Clear the clock divisor bits, reseting it to 0.
+		buffer &= 0xFFFFF1FF; // Clear the clock source selection bits, reseting it to 0 (ISO).
+		retval = oper_write_mem32(local_dap_con, GCR_ROOTADDR + GCR_CLKCTRL, buffer);
+		assert(retval == 0);
+
+		// Wait for the the system clock to be ready
+		do {
+			retval = oper_read_mem32(local_dap_con, GCR_ROOTADDR + GCR_CLKCTRL, &buffer);
+			assert(retval == 0);
+		} while (buffer & (1 << 13));
+	}
 
 	*dap_con = local_dap_con;
 
 	return 0;
 }
 signed int oper_destroy(DAP_Connection* dap_con) {
+	// Reset and release from halt
+	oper_reset(dap_con, 0);
+
 	// Disconnect
 	{
 		signed int retval;
