@@ -45,6 +45,8 @@ signed int oper_erase_flash_page(DAP_Connection* dap_con, uint32_t address, uint
 signed int oper_write_to_flash_page(DAP_Connection* dap_con, uint32_t address, uint32_t controller_address,
                                     uint32_t data_0, uint32_t data_1, uint32_t data_2, uint32_t data_3);
 
+signed int oper_reset(DAP_Connection* dap_con, int halt);
+
 signed int oper_init(DAP_Connection** dap_con, libusb_device_handle* d_handle);
 signed int oper_destroy(DAP_Connection* dap_con);
 

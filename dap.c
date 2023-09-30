@@ -16,23 +16,23 @@ signed int dap_info(DAP_Connection* dap_con, unsigned int id) {
 
 	retval = link_send_data(dap_con->device_handle, data, 2);
 	if (retval < 0) {
-		printf("Error: dap_info(): link_send_data() failed.\n");
+		//printf("Error: dap_info(): link_send_data() failed.\n");
 		return -1;
 	}
 
 	retval = link_receive_data(dap_con->device_handle, data, LINK_BUFFER_LENGTH);
 	if (retval < 0) {
-		printf("Error: dap_info(): link_receive_data() failed.\n");
+		//printf("Error: dap_info(): link_receive_data() failed.\n");
 		return -2;
 	}
 
 	if (data[0] != DAP_INFO) {
-		printf("Error: dap_info(): Erroneous return data/structure.\n");
+		//printf("Error: dap_info(): Erroneous return data/structure.\n");
 		return -3;
 	}
 
 	if (data[1] == 0) {
-		printf("Error: dap_info(): No data returned.\n");
+		//printf("Error: dap_info(): No data returned.\n");
 		return -4;
 	}
 
@@ -50,28 +50,28 @@ signed int dap_connect(DAP_Connection* dap_con, unsigned int mode) {
 
 	retval = link_send_data(dap_con->device_handle, data, 2);
 	if (retval < 0) {
-		printf("Error: dap_connect(): link_send_data() failed.\n");
+		//printf("Error: dap_connect(): link_send_data() failed.\n");
 		return -1;
 	}
 
 	retval = link_receive_data(dap_con->device_handle, data, LINK_BUFFER_LENGTH);
 	if (retval < 0) {
-		printf("Error: dap_connect(): link_receive_data() failed.\n");
+		//printf("Error: dap_connect(): link_receive_data() failed.\n");
 		return -2;
 	}
 
 	if (data[0] != DAP_CONNECT) {
-		printf("Error: dap_connect(): Erroneous return data/structure.\n");
+		//printf("Error: dap_connect(): Erroneous return data/structure.\n");
 		return -3;
 	}
 
 	if (data[1] == 0) {
-		printf("Error: dap_connect(): Connection initialization failed.\n");
+		//printf("Error: dap_connect(): Connection initialization failed.\n");
 		return -4;
 	}
 
 	if (data[1] != mode && mode != 0) {
-		printf("Error: dap_connect(): Returned connection mode (%d) does not match requested mode.\n", data[1]);
+		//printf("Error: dap_connect(): Returned connection mode (%d) does not match requested mode.\n", data[1]);
 		return -5;
 	}
 
@@ -86,22 +86,22 @@ signed int dap_disconnect(DAP_Connection* dap_con) {
 
 	retval = link_send_data(dap_con->device_handle, data, 1);
 	if (retval < 0) {
-		printf("Error: dap_disconnect(): link_send_data() failed.\n");
+		//printf("Error: dap_disconnect(): link_send_data() failed.\n");
 		return -1;
 	}
 
 	retval = link_receive_data(dap_con->device_handle, data, LINK_BUFFER_LENGTH);
 	if (retval < 0) {
-		printf("Error: dap_disconnect(): link_receive_data() failed.\n");
+		//printf("Error: dap_disconnect(): link_receive_data() failed.\n");
 		return -2;
 	}
 
 	if (data[0] != DAP_DISCONNECT) {
-		printf("Error: dap_disconnect(): Erroneous return data/structure.\n");
+		//printf("Error: dap_disconnect(): Erroneous return data/structure.\n");
 		return -3;
 	}
 	if (data[1] == DAP_STATUS_ERROR) {
-		printf("Error: dap_disconnect(): Returned failure status.\n");
+		//printf("Error: dap_disconnect(): Returned failure status.\n");
 		return -4;
 	}
 
@@ -122,7 +122,7 @@ signed int dap_transfer(DAP_Connection* dap_con, unsigned int dap_index, unsigne
 	k = 3;
 	for (i = 0; i < transfer_count; i++) {
 		if (j >= LINK_BUFFER_LENGTH) { // Don't overflow the TX buffer
-			printf("Error: dap_transfer(): TX data buffer overflow. Type A.\n");
+			//printf("Error: dap_transfer(): TX data buffer overflow. Type A.\n");
 			return -5;
 		}
 		unsigned char request;
@@ -131,7 +131,7 @@ signed int dap_transfer(DAP_Connection* dap_con, unsigned int dap_index, unsigne
 		j++;
 		if ((request & 0x02) == 0) { // Is TX request?
 			if (j > LINK_BUFFER_LENGTH - 4) { // Don't overflow the TX buffer
-				printf("Error: dap_transfer(): TX data buffer overflow. Type B.\n");
+				//printf("Error: dap_transfer(): TX data buffer overflow. Type B.\n");
 				return -5;
 			}
 			uint32_t tx32;
@@ -143,7 +143,7 @@ signed int dap_transfer(DAP_Connection* dap_con, unsigned int dap_index, unsigne
 			j += 4;
 		} else {
 			if (k > LINK_BUFFER_LENGTH - 4) { // Don't overflow the RX buffer
-				printf("Error: dap_transfer(): RX data buffer overflow.\n");
+				//printf("Error: dap_transfer(): RX data buffer overflow.\n");
 				return -5;
 			}
 			k += 4;
@@ -152,26 +152,26 @@ signed int dap_transfer(DAP_Connection* dap_con, unsigned int dap_index, unsigne
 
 	retval = link_send_data(dap_con->device_handle, data, j);
 	if (retval < 0) {
-		printf("Error: dap_transfer(): link_send_data() failed.\n");
+		//printf("Error: dap_transfer(): link_send_data() failed.\n");
 		return -1;
 	}
 
 	retval = link_receive_data(dap_con->device_handle, data, LINK_BUFFER_LENGTH);
 	if (retval < 0) {
-		printf("Error: dap_transfer(): link_receive_data() failed.\n");
+		//printf("Error: dap_transfer(): link_receive_data() failed.\n");
 		return -2;
 	}
 
 	if (data[0] != DAP_TRANSFER) {
-		printf("Error: dap_transfer(): Erroneous return data/structure.\n");
+		//printf("Error: dap_transfer(): Erroneous return data/structure.\n");
 		return -3;
 	}
 	if (data[1] != transfer_count) {
-		printf("Error: dap_transfer(): Returned wrong transfer count: %d, expected: %d.\n", data[1], transfer_count);
+		//printf("Error: dap_transfer(): Returned wrong transfer count: %d, expected: %d.\n", data[1], transfer_count);
 		return -5;
 	}
 	if (data[2] != 0x01) {
-		printf("Error: dap_transfer(): Returned failure status.\n");
+		//printf("Error: dap_transfer(): Returned failure status: 0x%02X\n", data[2]);
 		return -4;
 	}
 
@@ -206,7 +206,7 @@ signed int dap_swj_sequence(DAP_Connection* dap_con, unsigned int bit_count, uns
 	data[1] = bit_count;
 	for (i = 0; i < data_buffer_length; i++) {
 		if (i > (LINK_BUFFER_LENGTH - (2 + 1))) { // Don't overflow the buffer [ (LINK_BUFFER_LENGTH - (PREAMBLE_LENGTH + CONVERT_TO_INDEX)) == MAX_BUFFER_INDEX ]
-			printf("Error: dap_swj_sequence(): TX data buffer overflow.\n");
+			//printf("Error: dap_swj_sequence(): TX data buffer overflow.\n");
 			return -5;
 		}
 		data[2 + i] = data_buffer[i];
@@ -214,22 +214,22 @@ signed int dap_swj_sequence(DAP_Connection* dap_con, unsigned int bit_count, uns
 
 	retval = link_send_data(dap_con->device_handle, data, 2 + i);
 	if (retval < 0) {
-		printf("Error: dap_swj_sequence(): link_send_data() failed.\n");
+		//printf("Error: dap_swj_sequence(): link_send_data() failed.\n");
 		return -1;
 	}
 
 	retval = link_receive_data(dap_con->device_handle, data, LINK_BUFFER_LENGTH);
 	if (retval < 0) {
-		printf("Error: dap_swj_sequence(): link_receive_data() failed.\n");
+		//printf("Error: dap_swj_sequence(): link_receive_data() failed.\n");
 		return -2;
 	}
 
 	if (data[0] != DAP_SWJ_SEQUENCE) {
-		printf("Error: dap_swj_sequence(): Erroneous return data/structure.\n");
+		//printf("Error: dap_swj_sequence(): Erroneous return data/structure.\n");
 		return -3;
 	}
 	if (data[1] == DAP_STATUS_ERROR) {
-		printf("Error: dap_swj_sequence(): Returned failure status.\n");
+		//printf("Error: dap_swj_sequence(): Returned failure status.\n");
 		return -4;
 	}
 

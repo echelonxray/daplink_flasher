@@ -20,11 +20,14 @@
 void talk_to_dap(libusb_device_handle* d_handle) {
 	DAP_Connection* dap_con;
 
+	printf("Init...");
 	assert(! oper_init(&dap_con, d_handle) );
-	printf("Init\n\n");
+	printf("Done\n\n");
 
+	/*
 	uint32_t buffer[12];
 	uint32_t address = 0x10030000;
+	*/
 	//uint32_t address = 0x40029400;
 	/*
 	for (address = 0x10030000; address < 0x10030010; address += 0x4) {
@@ -34,6 +37,7 @@ void talk_to_dap(libusb_device_handle* d_handle) {
 		printf("Read32 from 0x%08X: 0x%08X; Next addr: 0x%08X\n", address, buffer[0], tmp);
 	}
 	*/
+	/*
 	printf("[START] Stage 1\n");
 	assert(! oper_read_memblock32(dap_con, address, buffer, 12) );
 	for (unsigned int i = 0; i < 12; i++) {
@@ -60,6 +64,7 @@ void talk_to_dap(libusb_device_handle* d_handle) {
 		printf("\tValue: 0x%08X\n", buffer[i]);
 	}
 	printf("[END] Stage 4\n\n");
+	*/
 
 	//assert(! oper_read_memblock32(dap_con, address, buffer, 8) );
 	//for (unsigned int i = 0; i < 8; i++) {
@@ -76,8 +81,14 @@ void talk_to_dap(libusb_device_handle* d_handle) {
 	}
 	*/
 
+	printf("Reset (Halt == True)...");
+	oper_reset(dap_con, 1);
+	printf("Done\n");
+
+	printf("\n");
+	printf("Destroy...");
 	assert(! oper_destroy(dap_con) );
-	printf("Destroy\n");
+	printf("Done\n");
 
 	return;
 }
