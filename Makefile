@@ -14,9 +14,10 @@ TAG           :=
 
 GFILES        :=
 GFILES        := $(GFILES) main.o
-GFILES        := $(GFILES) operations.o
-GFILES        := $(GFILES) dap.o
-GFILES        := $(GFILES) link.o
+GFILES        := $(GFILES) mode_flash.o
+GFILES        := $(GFILES) dapctl/dap_link.o
+GFILES        := $(GFILES) dapctl/dap_cmds.o
+GFILES        := $(GFILES) dapctl/dap_oper.o
 
 # What list of base filenames are we to build?
 FILES_BASE    := $(basename $(GFILES))

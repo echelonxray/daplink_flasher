@@ -1,5 +1,5 @@
-#include "main.h"
-#include "operations.h"
+#include "../main.h"
+#include "dap_oper.h"
 
 #include <stdio.h>
 #include <stdlib.h>

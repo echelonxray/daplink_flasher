@@ -1,7 +1,7 @@
 #ifndef _HEADERINC_OPERATIONS_H
 #define _HEADERINC_OPERATIONS_H
 
-#include "dap.h"
+#include "dap_cmds.h"
 #include <stdint.h>
 #include <libusb-1.0/libusb.h>
 

@@ -1,6 +1,6 @@
 #include "main.h"
-#include "dap.h"
-#include "operations.h"
+#include "dapctl/dap_cmds.h"
+#include "dapctl/dap_oper.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,8 +51,6 @@ typedef struct {
 } ImageParam;
 
 int main(int argc, const char* argv[]) {
-	printf("[START]\n");
-
 	size_t imagecount = 0;
 	ImageParam* imagelist = NULL;
 
@@ -288,7 +286,6 @@ int main(int argc, const char* argv[]) {
 		free(imagelist[i].data);
 	}
 	free(imagelist);
-	
-	printf("[END]\n");
+
 	return 0;
 }
