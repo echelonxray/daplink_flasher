@@ -1,12 +1,8 @@
 #ifndef _HEADERINC_DAP_H
 #define _HEADERINC_DAP_H
 
+#include "../main.h"
 #include <stdint.h>
-
-typedef struct {
-	void* device_handle;
-	unsigned int sel_addr;
-} DAP_Connection;
 
 #define DAP_STATUS_OK    0x00
 #define DAP_STATUS_ERROR 0xFF

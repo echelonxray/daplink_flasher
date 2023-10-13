@@ -1,5 +1,5 @@
+#include "../main.h"
 #include "dap_link.h"
-
 //#include <stdio.h>
 //#include <string.h>
 #include <libusb-1.0/libusb.h>

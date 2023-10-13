@@ -1,6 +1,6 @@
+#include "../main.h"
 #include "dap_cmds.h"
 #include "dap_link.h"
-
 #include <stdio.h>
 //#include <string.h>
 

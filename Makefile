@@ -3,7 +3,7 @@ OBJCPY        := objcopy
 STRIP         := strip
 LDFLAGS       := -lusb-1.0
 CFLAGS        :=
-CFLAGS        := $(CFLAGS) -Wall -Wextra -g # Set build warnings and debugging
+CFLAGS        := $(CFLAGS) -Wall -Wextra -Wno-unused-parameter -g # Set build warnings and debugging
 CFLAGS        := $(CFLAGS) -std=c99 # The standards to build to.
 CFLAGS        := $(CFLAGS) -fno-stack-check -fno-stack-protector -fomit-frame-pointer -ffunction-sections -flto
 CFLAGS        := $(CFLAGS) -O3 -MMD
@@ -15,9 +15,15 @@ TAG           :=
 GFILES        :=
 GFILES        := $(GFILES) main.o
 GFILES        := $(GFILES) mode_flash.o
+GFILES        := $(GFILES) chips.o
+GFILES        := $(GFILES) probes.o
 GFILES        := $(GFILES) dapctl/dap_link.o
 GFILES        := $(GFILES) dapctl/dap_cmds.o
 GFILES        := $(GFILES) dapctl/dap_oper.o
+
+GFILES        := $(GFILES) chips/max32690.o
+
+GFILES        := $(GFILES) probes/max32625pico.o
 
 # What list of base filenames are we to build?
 FILES_BASE    := $(basename $(GFILES))
