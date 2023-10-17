@@ -57,11 +57,11 @@ static signed int erase_flash_page(DAP_Connection* dap_con, uint32_t address) {
 	uint32_t page_size;
 	uint32_t controller_address;
 	if        (address >= 0x10000000 && address <= 0x102FFFFF) {
-		controller_address = 0x4000;
-		page_size = 0x40029000;
+		page_size = 0x4000;
+		controller_address = 0x40029000;
 	} else if (address >= 0x10300000 && address <= 0x1033FFFF) {
-		controller_address = 0x2000;
-		page_size = 0x40029400;
+		page_size = 0x2000;
+		controller_address = 0x40029400;
 	} else {
 		//dprintf(STDOUT, "Error: oper_erase_flash_page(): Address Out of Range: 0x%08X.\n", address);
 		return -5;
@@ -117,9 +117,9 @@ static signed int erase_flash_page(DAP_Connection* dap_con, uint32_t address) {
 static signed int _write_to_flash_page(DAP_Connection* dap_con, uint32_t address, uint32_t data_0, uint32_t data_1, uint32_t data_2, uint32_t data_3) {
 	uint32_t controller_address;
 	if        (address >= 0x10000000 && address <= 0x102FFFFF) {
-		controller_address = 0x4000;
+		controller_address = 0x40029000;
 	} else if (address >= 0x10300000 && address <= 0x1033FFFF) {
-		controller_address = 0x2000;
+		controller_address = 0x40029400;
 	} else {
 		//dprintf(STDOUT, "Error: oper_erase_flash_page(): Address Out of Range: 0x%08X.\n", address);
 		return -5;
@@ -363,7 +363,9 @@ static signed int conn_init(DAP_Connection* dap_con, libusb_device_handle* d_han
 	return 0;
 }
 static signed int conn_destroy(DAP_Connection* dap_con) {
+	//dprintf(STDOUT, "TraceA\n");
 	chip_reset(dap_con, 0);
+	//dprintf(STDOUT, "TraceB\n");
 	return 0;
 }
 

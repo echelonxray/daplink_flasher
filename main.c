@@ -22,7 +22,7 @@
 
 void talk_to_dap(libusb_device_handle* d_handle) {
 	DAP_Connection dap_con;
-	
+
 	assert(! chips_find(&dap_con, "max32690") );
 
 	dprintf(STDOUT, "START: Init Connection\n");
@@ -30,25 +30,63 @@ void talk_to_dap(libusb_device_handle* d_handle) {
 	dprintf(STDOUT, "END: Init Connection\n");
 
 	uint32_t address = 0x10030000;
+	int len = 2;
+	uint32_t buffer[len];
+	oper_read_memblock32(&dap_con, address, buffer, len);
+	for (int i = 0; i < len; i++) {
+		printf("Address: 0x%08X, Value: 0x%08X\n", address + (4 * i), buffer[i]);
+	}
+	/*
+	uint32_t tmp;
+	tmp = buffer[0];
+	for (int i = 0; i < len; i++) {
+		if (i == len - 1) {
+			buffer[i] = tmp;
+		} else {
+			buffer[i] = buffer[i + 1];
+		}
+	}
+	*/
+
+	dprintf(STDOUT, "START: Destroy Connection\n");
+	assert(! chip_conn_destroy(&dap_con) );
+	dprintf(STDOUT, "END: Destroy Connection\n");
+
+	dprintf(STDOUT, "START: Init Connection\n");
+	assert(! chip_conn_init(&dap_con, d_handle) );
+	dprintf(STDOUT, "END: Init Connection\n");
+
+	assert(! chip_erase_flash_page(&dap_con, address) );
+	/*
+	buffer[0] = 0x01234567;
+	buffer[1] = 0x89ABCDEF;
+	buffer[2] = 0xDEADF33D;
+	buffer[3] = 0xB16B00B5;
+	*/
+
+	unsigned char buffer2[0x8];
+	buffer2[0x0] = 0x01;
+	buffer2[0x1] = 0x23;
+	buffer2[0x2] = 0x45;
+	buffer2[0x3] = 0x67;
+	buffer2[0x4] = 0x89;
+	buffer2[0x5] = 0xAB;
+	buffer2[0x6] = 0xCD;
+	buffer2[0x7] = 0xEF;
+	assert(! chip_write_to_flash_page(&dap_con, address, buffer2, 0x8) );
+
+	/*
+	uint32_t address = 0x10030000;
 	uint32_t buffer[4];
 	oper_read_memblock32(&dap_con, 0x10030000, buffer, 4);
 	for (int i = 0; i < 4; i++) {
 		printf("Address: 0x%08X, Value: 0x%08X\n", address + (4 * i), buffer[i]);
 	}
-
-	dprintf(STDOUT, "START: Destroy Connection\n");
-	assert(! chip_conn_destroy(&dap_con) );
-	dprintf(STDOUT, "END: Destroy Connection\n");
-
-	/*
-	dprintf(STDOUT, "START: Init Connection\n");
-	assert(! chip_conn_init(&dap_con, d_handle) );
-	dprintf(STDOUT, "END: Init Connection\n");
-
-	dprintf(STDOUT, "START: Destroy Connection\n");
-	assert(! chip_conn_destroy(&dap_con) );
-	dprintf(STDOUT, "END: Destroy Connection\n");
 	*/
+
+	dprintf(STDOUT, "START: Destroy Connection\n");
+	assert(! chip_conn_destroy(&dap_con) );
+	dprintf(STDOUT, "END: Destroy Connection\n");
 
 	return;
 }
