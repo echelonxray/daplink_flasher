@@ -1,4 +1,5 @@
 #include "main.h"
+#include "chips.h"
 #include "dapctl/dap_cmds.h"
 #include "dapctl/dap_oper.h"
 #include <stdio.h>
@@ -20,15 +21,34 @@
 #define MODE_READ   0x2
 
 void talk_to_dap(libusb_device_handle* d_handle) {
-	DAP_Connection* dap_con;
+	DAP_Connection dap_con;
+	
+	assert(! chips_find(&dap_con, "max32690") );
 
 	dprintf(STDOUT, "START: Init Connection\n");
-	assert(! oper_init(&dap_con, d_handle) );
+	assert(! chip_conn_init(&dap_con, d_handle) );
+	dprintf(STDOUT, "END: Init Connection\n");
+
+	uint32_t address = 0x10030000;
+	uint32_t buffer[4];
+	oper_read_memblock32(&dap_con, 0x10030000, buffer, 4);
+	for (int i = 0; i < 4; i++) {
+		printf("Address: 0x%08X, Value: 0x%08X\n", address + (4 * i), buffer[i]);
+	}
+
+	dprintf(STDOUT, "START: Destroy Connection\n");
+	assert(! chip_conn_destroy(&dap_con) );
+	dprintf(STDOUT, "END: Destroy Connection\n");
+
+	/*
+	dprintf(STDOUT, "START: Init Connection\n");
+	assert(! chip_conn_init(&dap_con, d_handle) );
 	dprintf(STDOUT, "END: Init Connection\n");
 
 	dprintf(STDOUT, "START: Destroy Connection\n");
-	assert(! oper_destroy(dap_con) );
+	assert(! chip_conn_destroy(&dap_con) );
 	dprintf(STDOUT, "END: Destroy Connection\n");
+	*/
 
 	return;
 }

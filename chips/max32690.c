@@ -1,6 +1,9 @@
 #include "../main.h"
+#include "../chips.h"
 #include "../dapctl/dap_oper.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <assert.h>
 
 #define FLC0_BASE 0x40029000
@@ -51,10 +54,20 @@
 #define GCR_GPR0           0x80
 
 static signed int erase_flash_page(DAP_Connection* dap_con, uint32_t address) {
-	if (address & (page_size - 1)) {
-		//dprintf(STDOUT, "Error: oper_erase_flash_page(): Address Misaligned: 0x%08X, Page Size: 0x%08X.\n", address, page_size);
+	uint32_t page_size;
+	uint32_t controller_address;
+	if        (address >= 0x10000000 && address <= 0x102FFFFF) {
+		controller_address = 0x4000;
+		page_size = 0x40029000;
+	} else if (address >= 0x10300000 && address <= 0x1033FFFF) {
+		controller_address = 0x2000;
+		page_size = 0x40029400;
+	} else {
+		//dprintf(STDOUT, "Error: oper_erase_flash_page(): Address Out of Range: 0x%08X.\n", address);
 		return -5;
 	}
+
+	address &= ~(page_size - 1); // Technically not needed.  Align address to page.
 
 	oper_write_mem32(dap_con, controller_address + FLCn_INTR, 0x00000000); // Disable interrupts and clear status flags.
 
@@ -101,8 +114,18 @@ static signed int erase_flash_page(DAP_Connection* dap_con, uint32_t address) {
 	//dprintf(STDOUT, "Error: oper_erase_flash_page(): Code pathway should not be reachable: 0x%08X, Page Size: 0x%08X.\n", address, page_size);
 	return -5;
 }
-static signed int write_to_flash_page(DAP_Connection* dap_con, uint32_t address, unsigned char* data) {
-	if (address & (0x4 - 1)) {
+static signed int _write_to_flash_page(DAP_Connection* dap_con, uint32_t address, uint32_t data_0, uint32_t data_1, uint32_t data_2, uint32_t data_3) {
+	uint32_t controller_address;
+	if        (address >= 0x10000000 && address <= 0x102FFFFF) {
+		controller_address = 0x4000;
+	} else if (address >= 0x10300000 && address <= 0x1033FFFF) {
+		controller_address = 0x2000;
+	} else {
+		//dprintf(STDOUT, "Error: oper_erase_flash_page(): Address Out of Range: 0x%08X.\n", address);
+		return -5;
+	}
+
+	if (address & (0x10 - 1)) {
 		//dprintf(STDOUT, "Error: oper_write_flash_page(): Address Misaligned: 0x%08X.\n", address);
 		return -5;
 	}
@@ -158,22 +181,123 @@ static signed int write_to_flash_page(DAP_Connection* dap_con, uint32_t address,
 
 	return 0;
 }
+static signed int write_to_flash_page(DAP_Connection* dap_con, uint32_t address, unsigned char* data, size_t data_len) {
+	// Does not need to handle data_len == 0.
+	// Does not need to handle address + data_len type overflow.
+	// These are checked in the wrapper function.
 
-/*
-signed int oper_program_flash(DAP_Connection* dap_con, uint32_t address, uint8_t* buffer, uint32_t buffer_length) {
-	if (address & 0x3) {
-		//dprintf(STDOUT, "Error: oper_read_memblock32(): Address Misaligned: 0x%08X.\n", address);
-		return -5;
+	if (address < 0x10000000 && address > 0x1033FFFF) {
+		// TODO
+		return -1;
 	}
 
-	uint32_t size_of_used_pages;
-	uint32_t start_page_address;
-	uint32_t end_page_address;
-	start_page_address = address & 0x;
-	size_of_used_pages
-	void* page_backup;
-	page_backup = malloc(size_of_used_pages);
-	assert(! oper_read_memblock32(dap_con, address, page_backup, size_of_used_pages / 4) );
+	uint32_t start_aligned_address;
+	start_aligned_address = address;
+	start_aligned_address &= ~(0x10 - 1);
+
+	uint32_t end_aligned_address;
+	end_aligned_address = address + data_len;
+	end_aligned_address &= ~(0x10 - 1);
+	if (end_aligned_address & (0x10 - 1)) {
+		end_aligned_address += 0x10;
+	}
+
+	uint32_t current_address;
+	current_address = start_aligned_address;
+	while (current_address != end_aligned_address) {
+		uint32_t buffer[4];
+		oper_read_memblock32(dap_con, current_address, buffer, 4);
+		uint32_t data_offset = 0;
+		if (current_address < address) {
+			data_offset = address - current_address;
+		}
+		uint32_t data_length;
+		data_length = 0x10 - data_offset;
+		if ((current_address + 0x10) > (address + data_len)) {
+			data_length -= (current_address + 0x10) - (address + data_len);
+		}
+		char* buffer_ptr = (char*)buffer;
+		// Possible endianness issue using memcpy to copy into uint32_t buffer - TEST THIS!!
+		memcpy(buffer_ptr + data_offset, data, data_length);
+		data += data_length;
+		signed int retval;
+		retval = _write_to_flash_page(dap_con, current_address, buffer[0], buffer[1], buffer[2], buffer[3]);
+		if (retval) {
+			return retval;
+		}
+		current_address += 0x10;
+	}
+
+	return 0;
+}
+
+/*
+static signed int oper_program_flash(DAP_Connection* dap_con, uint32_t address, uint8_t* buffer, uint32_t buffer_length) {
+	if (buffer_length == 0) {
+		return 0;
+	}
+	if (address < 0x10000000 && address > 0x1033FFFF) {
+		return -1;
+	}
+
+	// Erase Flash
+	uint32_t* start_page_backup = malloc(0x4000);
+	if (start_page_backup == NULL) {
+		// TODO: Handle malloc() failure
+	}
+	uint32_t* end_page_backup = malloc(0x4000);
+	if (end_page_backup == NULL) {
+		// TODO: Handle malloc() failure
+	}
+	for (uint32_t i = 0; i < buffer_length; i++) {
+		uint32_t page_size;
+		if        (tmp_address >= 0x10000000 && tmp_address <= 0x102FFFFF) {
+			page_size = 0x4000;
+		} else if (tmp_address >= 0x10300000 && tmp_address <= 0x1033FFFF) {
+			page_size = 0x2000;
+		}
+		uint32_t address_offset;
+		uint32_t aligned_address;
+		uint32_t next_i;
+		address_offset = address & (page_size - 1);
+		aligned_address = address & ~(page_size - 1);
+		next_i = i + page_size;
+		if (i == 0 && tmp_address != address) {
+			oper_read_memblock32(dap_con, tmp_address, start_page_backup, page_size / sizeof(uint32_t));
+		} else if (next_i >= buffer_length && (address + buffer_length) & (page_size - 1)) {
+			oper_read_memblock32(dap_con, tmp_address, end_page_backup, page_size / sizeof(uint32_t));
+		}
+		erase_flash_page(dap_con, tmp_address);
+		if (i == 0 && tmp_address != address) {
+			uint32_t copy_length;
+			copy_length = page_size - address_offset;
+			if (buffer_index + copy_length > buffer_length) {
+				copy_length = buffer_length - buffer_index;
+			}
+			memcpy(start_page_backup + address_offset, buffer, copy_length);
+			buffer += page_size - address_offset;
+			write_to_flash_page(dap_con, tmp_address, start_page_backup, page_size);
+		} else if (next_i >= buffer_length && (address + buffer_length) & (page_size - 1)) {
+			memcpy(start_page_backup + address_offset, buffer, page_size - address_offset);
+			write_to_flash_page(dap_con, tmp_address, end_page_backup, page_size);
+		}
+		tmp_address += page_size;
+		i = next_i;
+	}
+
+	// Write Flash
+	if        (address >= 0x10000000 && address <= 0x102FFFFF) {
+		tmp_address = address & ~(0x4000 - 1);
+	} else if (address >= 0x10300000 && address <= 0x1033FFFF) {
+		tmp_address = address & ~(0x2000 - 1);
+	}
+	if (tmp_address != address) {
+	}
+	for (uint32_t i = 0; i < buffer_length; i++) {
+	}
+	write_to_flash_page(dap_con, address, buffer, buffer_length);
+	free(start_page_backup);
+	free(end_page_backup);
 
 	return 0;
 }
@@ -194,7 +318,9 @@ static signed int reset(DAP_Connection* dap_con, int halt) {
 	return 0;
 }
 
-static signed int conn_init(DAP_Connection* dap_con) {
+static signed int conn_init(DAP_Connection* dap_con, libusb_device_handle* d_handle) {
+	chip_reset(dap_con, 1);
+
 	// Configure Clock - Set to 60Mhz internal oscillator (ISO)
 	{
 		uint32_t buffer;
@@ -237,6 +363,7 @@ static signed int conn_init(DAP_Connection* dap_con) {
 	return 0;
 }
 static signed int conn_destroy(DAP_Connection* dap_con) {
+	chip_reset(dap_con, 0);
 	return 0;
 }
 

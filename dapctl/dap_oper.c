@@ -298,16 +298,13 @@ signed int oper_read_memblock32(DAP_Connection* dap_con, uint32_t address, uint3
 	return 0;
 }
 
-signed int oper_init(DAP_Connection** dap_con, libusb_device_handle* d_handle) {
-	DAP_Connection* local_dap_con;
-
-	local_dap_con = malloc(sizeof(DAP_Connection));
-	local_dap_con->device_handle = d_handle;
+signed int oper_init(DAP_Connection* dap_con, libusb_device_handle* d_handle) {
+	dap_con->device_handle = d_handle;
 
 	// Connect
 	{
 		signed int retval;
-		retval = dap_connect(local_dap_con, DAP_CONNECT_PORT_MODE_SWD);
+		retval = dap_connect(dap_con, DAP_CONNECT_PORT_MODE_SWD);
 		assert(retval == 0);
 		//dprintf(STDOUT, "Connect.\n");
 	}
@@ -318,7 +315,7 @@ signed int oper_init(DAP_Connection** dap_con, libusb_device_handle* d_handle) {
 		unsigned char sequence[] = {
 			0x00,
 		};
-		retval = dap_swj_sequence(local_dap_con, 0x08, sequence, sizeof(sequence) / sizeof(*sequence));
+		retval = dap_swj_sequence(dap_con, 0x08, sequence, sizeof(sequence) / sizeof(*sequence));
 		assert(retval == 0);
 		//dprintf(STDOUT, "SWJ Sequence.\n");
 	}
@@ -327,7 +324,7 @@ signed int oper_init(DAP_Connection** dap_con, libusb_device_handle* d_handle) {
 	{
 		signed int retval;
 		uint32_t buffer;
-		retval = oper_read_reg(local_dap_con, OPER_REG_DEBUG_IDCODE, &buffer);
+		retval = oper_read_reg(dap_con, OPER_REG_DEBUG_IDCODE, &buffer);
 		assert(retval == 0);
 		//dprintf(STDOUT, "Transfer - Read Debug Port IDCODE register: 0x%08X.\n", buffer);
 	}
@@ -335,9 +332,9 @@ signed int oper_init(DAP_Connection** dap_con, libusb_device_handle* d_handle) {
 	// Transfer - Enable AP register access and configure DB SELECT to enable access to the AP ID register
 	{
 		signed int retval;
-		retval = oper_write_reg(local_dap_con, OPER_REG_DEBUG_CTRLSTAT, 0x50000000);
+		retval = oper_write_reg(dap_con, OPER_REG_DEBUG_CTRLSTAT, 0x50000000);
 		assert(retval == 0);
-		retval = oper_write_reg(local_dap_con, OPER_REG_DEBUG_SELECT, 0x000000F0);
+		retval = oper_write_reg(dap_con, OPER_REG_DEBUG_SELECT, 0x000000F0);
 		assert(retval == 0);
 		//dprintf(STDOUT, "Transfer - Enable AHB-AP register access and set the SELECT register.\n");
 	}
@@ -346,7 +343,7 @@ signed int oper_init(DAP_Connection** dap_con, libusb_device_handle* d_handle) {
 	{
 		signed int retval;
 		uint32_t buffer;
-		retval = oper_read_reg(local_dap_con, OPER_REG_ACCESS_IDR, &buffer);
+		retval = oper_read_reg(dap_con, OPER_REG_ACCESS_IDR, &buffer);
 		assert(retval == 0);
 		//dprintf(STDOUT, "Transfer - Read Access Port IDR register: 0x%08X.\n", buffer);
 	}
@@ -354,15 +351,13 @@ signed int oper_init(DAP_Connection** dap_con, libusb_device_handle* d_handle) {
 	// TODO: Check SOC Model
 
 	// Reset and Halt
-	dprintf(STDOUT, "Reset and halt...");
-	chip_reset(local_dap_con, 1);
-	dprintf(STDOUT, "Done\n");
+	//dprintf(STDOUT, "Reset and halt...");
+	//chip_reset(local_dap_con, 1);
+	//dprintf(STDOUT, "Done\n");
 
-	dprintf(STDOUT, "Chip Conn Init...");
-	chip_conn_init(local_dap_con);
-	dprintf(STDOUT, "Done\n");
-
-	*dap_con = local_dap_con;
+	//dprintf(STDOUT, "Chip Conn Init...");
+	//chip_conn_init(local_dap_con);
+	//dprintf(STDOUT, "Done\n");
 
 	return 0;
 }
@@ -377,8 +372,6 @@ signed int oper_destroy(DAP_Connection* dap_con) {
 		assert(retval == 0);
 		//dprintf(STDOUT, "Disconnect.\n");
 	}
-
-	free(dap_con);
 
 	return 0;
 }

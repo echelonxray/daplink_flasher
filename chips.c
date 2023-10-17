@@ -1,6 +1,7 @@
 #include "main.h"
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 #include "dapctl/dap_oper.h"
 #include "chips.h"
 
@@ -9,10 +10,17 @@ signed int chip_erase_flash_page(DAP_Connection* dap_con, uint32_t address) {
     chips_erase_flash_page = dap_con->chip_pfns.chips_erase_flash_page;
     return chips_erase_flash_page(dap_con, address);
 }
-signed int chip_write_to_flash_page(DAP_Connection* dap_con, uint32_t address, unsigned char* data) {
+signed int chip_write_to_flash_page(DAP_Connection* dap_con, uint32_t address, unsigned char* data, size_t data_len) {
+    if (data_len == 0) {
+        return 0;
+    }
+    if ((address + data_len) < address) {
+        // Overflow
+        return -1;
+    }
     ChipsWriteToFlashPage_PFN chips_write_to_flash_page;
     chips_write_to_flash_page = dap_con->chip_pfns.chips_write_to_flash_page;
-    return chips_write_to_flash_page(dap_con, address, data);
+    return chips_write_to_flash_page(dap_con, address, data, data_len);
 }
 
 signed int chip_reset(DAP_Connection* dap_con, int halt){
@@ -21,7 +29,9 @@ signed int chip_reset(DAP_Connection* dap_con, int halt){
     return chips_reset(dap_con, halt);
 }
 
-signed int chip_conn_init(DAP_Connection* dap_con) {
+signed int chip_conn_init(DAP_Connection* dap_con, libusb_device_handle* d_handle) {
+    //assert(! chips_find(dap_con, chipname) );
+    assert(! oper_init(dap_con, d_handle) );
     ChipsConnInit_PFN chips_conn_init;
     chips_conn_init = dap_con->chip_pfns.chips_conn_init;
     return chips_conn_init(dap_con);
@@ -29,7 +39,10 @@ signed int chip_conn_init(DAP_Connection* dap_con) {
 signed int chip_conn_destroy(DAP_Connection* dap_con) {
     ChipsConnDestroy_PFN chips_conn_destroy;
     chips_conn_destroy = dap_con->chip_pfns.chips_conn_destroy;
-    return chips_conn_destroy(dap_con);
+    signed int retval;
+    retval = chips_conn_destroy(dap_con);
+    assert(! oper_destroy(dap_con) );
+    return retval;
 }
 
 void chips_ff_max32690(DAP_Connection* dap_con);
