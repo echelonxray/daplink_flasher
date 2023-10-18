@@ -30,11 +30,11 @@ void talk_to_dap(libusb_device_handle* d_handle) {
 	dprintf(STDOUT, "END: Init Connection\n");
 
 	uint32_t address = 0x10030000;
-	int len = 2;
+	int len = 4;
 	uint32_t buffer[len];
 	oper_read_memblock32(&dap_con, address, buffer, len);
 	for (int i = 0; i < len; i++) {
-		printf("Address: 0x%08X, Value: 0x%08X\n", address + (4 * i), buffer[i]);
+		printf("Address: 0x%08X, Value: 0x%08X\n", (uint32_t)(address + (sizeof(uint32_t) * i)), buffer[i]);
 	}
 	/*
 	uint32_t tmp;
@@ -56,6 +56,7 @@ void talk_to_dap(libusb_device_handle* d_handle) {
 	assert(! chip_conn_init(&dap_con, d_handle) );
 	dprintf(STDOUT, "END: Init Connection\n");
 
+	printf("Erase> Address: 0x%08X\n", address);
 	assert(! chip_erase_flash_page(&dap_con, address) );
 	/*
 	buffer[0] = 0x01234567;
@@ -64,7 +65,7 @@ void talk_to_dap(libusb_device_handle* d_handle) {
 	buffer[3] = 0xB16B00B5;
 	*/
 
-	unsigned char buffer2[0x8];
+	unsigned char buffer2[len * sizeof(uint32_t)];
 	buffer2[0x0] = 0x01;
 	buffer2[0x1] = 0x23;
 	buffer2[0x2] = 0x45;
@@ -73,7 +74,28 @@ void talk_to_dap(libusb_device_handle* d_handle) {
 	buffer2[0x5] = 0xAB;
 	buffer2[0x6] = 0xCD;
 	buffer2[0x7] = 0xEF;
-	assert(! chip_write_to_flash_page(&dap_con, address, buffer2, 0x8) );
+	buffer2[0x8] = 0x01;
+	buffer2[0x9] = 0x23;
+	buffer2[0xA] = 0x45;
+	buffer2[0xB] = 0x67;
+	buffer2[0xC] = 0x89;
+	buffer2[0xD] = 0xAB;
+	buffer2[0xE] = 0xCD;
+	buffer2[0xF] = 0xEF;
+	printf("Write> Address: 0x%08X\n", address);
+	for (int i = 0; i < len; i++) {
+		uint32_t tmp0 = buffer2[i * sizeof(uint32_t) + 0];
+		uint32_t tmp1 = buffer2[i * sizeof(uint32_t) + 1];
+		uint32_t tmp2 = buffer2[i * sizeof(uint32_t) + 2];
+		uint32_t tmp3 = buffer2[i * sizeof(uint32_t) + 3];
+		uint32_t tmpi = 0;
+		tmpi |= (tmp0 << 24);
+		tmpi |= (tmp1 << 16);
+		tmpi |= (tmp2 <<  8);
+		tmpi |= (tmp3 <<  0);
+		printf("\t%02X, %02X, %02X, %02X | 0x%08X\n", tmp0, tmp1, tmp2, tmp3, tmpi);
+	}
+	assert(! chip_write_to_flash_page(&dap_con, address, buffer2, len * sizeof(uint32_t)) );
 
 	/*
 	uint32_t address = 0x10030000;

@@ -14,12 +14,12 @@ TAG           :=
 
 GFILES        :=
 GFILES        := $(GFILES) main.o
-GFILES        := $(GFILES) mode_flash.o
 GFILES        := $(GFILES) chips.o
 GFILES        := $(GFILES) probes.o
 GFILES        := $(GFILES) dapctl/dap_link.o
 GFILES        := $(GFILES) dapctl/dap_cmds.o
 GFILES        := $(GFILES) dapctl/dap_oper.o
+GFILES        := $(GFILES) modes/flash.o
 
 GFILES        := $(GFILES) chips/max32690.o
 

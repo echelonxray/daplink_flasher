@@ -1,4 +1,5 @@
-#include "main.h"
+#include "../main.h"
+#include "flash.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -8,7 +9,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
-#include "mode_flash.h"
 
 #define IMAGE_TYPE_BIN  0x1
 #define IMAGE_TYPE_IHEX 0x2
