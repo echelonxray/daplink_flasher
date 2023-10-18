@@ -125,10 +125,10 @@ static signed int _write_to_flash_page(DAP_Connection* dap_con, uint32_t address
 		return -5;
 	}
 
-	if (address & (0x10 - 1)) {
-		//dprintf(STDOUT, "Error: oper_write_flash_page(): Address Misaligned: 0x%08X.\n", address);
-		return -5;
-	}
+	//if (address & (0x10 - 1)) {
+	//	//dprintf(STDOUT, "Error: oper_write_flash_page(): Address Misaligned: 0x%08X.\n", address);
+	//	return -5;
+	//}
 
 	oper_write_mem32(dap_con, controller_address + FLCn_INTR, 0x00000000); // Disable interrupts and clear status flags.
 
@@ -181,10 +181,32 @@ static signed int _write_to_flash_page(DAP_Connection* dap_con, uint32_t address
 
 	return 0;
 }
+static signed int _write_to_flash_page_partial(DAP_Connection* dap_con, uint32_t address, unsigned char* data, size_t data_len) {
+	uint32_t aligned_address;
+	uint32_t start_skip_count;
+
+	aligned_address  = address & ~(0x10 - 1);
+	start_skip_count = address - aligned_address;
+
+	uint32_t buffer[4];
+	oper_read_memblock32(dap_con, aligned_address, buffer, 4);
+
+	unsigned char* buffer_ptr = (unsigned char*)buffer;
+	buffer_ptr += start_skip_count;
+	for (unsigned int i = 0; i < data_len; i++) {
+		*buffer_ptr = data[i];
+		buffer_ptr++;
+	}
+
+	// TODO: Handle Return
+	_write_to_flash_page(dap_con, aligned_address, buffer[0], buffer[1], buffer[2], buffer[3]);
+
+	return 0;
+}
 static signed int write_to_flash_page(DAP_Connection* dap_con, uint32_t address, unsigned char* data, size_t data_len) {
 	// Does not need to handle data_len == 0.
 	// Does not need to handle address + data_len type overflow.
-	// These are checked in the wrapper function.
+	// These cases are checked in the wrapper function.
 
 	if (address < 0x10000000 && address > 0x1033FFFF) {
 		// TODO
@@ -198,34 +220,80 @@ static signed int write_to_flash_page(DAP_Connection* dap_con, uint32_t address,
 	uint32_t end_aligned_address;
 	end_aligned_address = address + data_len;
 	end_aligned_address &= ~(0x10 - 1);
-	if (end_aligned_address & (0x10 - 1)) {
-		end_aligned_address += 0x10;
+
+	if (start_aligned_address == end_aligned_address) {
+		// TODO: Handle Return
+		_write_to_flash_page_partial(dap_con, address, data, data_len);
+		return 0;
 	}
 
-	uint32_t current_address;
-	current_address = start_aligned_address;
-	while (current_address != end_aligned_address) {
+	uint32_t current_aligned_address;
+	current_aligned_address = start_aligned_address;
+
+	if (current_aligned_address != address) {
+		// TODO: Handle Return
+		uint32_t part_length;
+		part_length = 0x10 - (address - current_aligned_address);
+		_write_to_flash_page_partial(dap_con, address, data, part_length);
+		data += part_length;
+		current_aligned_address += 0x10;
+	}
+
+	while (current_aligned_address != end_aligned_address) {
 		uint32_t buffer[4];
-		oper_read_memblock32(dap_con, current_address, buffer, 4);
+		unsigned char* buffer_ptr = (unsigned char*)buffer;
+		for (unsigned int i = 0; i < sizeof(*buffer) * 4; i++) {
+			*buffer_ptr = *data;
+			data++;
+			buffer_ptr++;
+		}
+		/*
+		for (unsigned short i = 0; i < 4; i++) (
+			buffer[i] = 0;
+			for (signed short j = 3; j >= 0; j--) {
+				buffer[i] <<= 8;
+				buffer[i] |= data[j];
+			}
+			data += 4;
+		)
+		*/
+
+		// TODO: Handle Return
+		_write_to_flash_page(dap_con, current_aligned_address, buffer[0], buffer[1], buffer[2], buffer[3]);
+		/*
+		uint32_t buffer[4];
+
+		oper_read_memblock32(dap_con, current_aligned_address, buffer, 4);
 		uint32_t data_offset = 0;
-		if (current_address < address) {
-			data_offset = address - current_address;
+		if (current_aligned_address < address) {
+			data_offset = address - current_aligned_address;
 		}
 		uint32_t data_length;
-		data_length = 0x10 - data_offset;
-		if ((current_address + 0x10) > (address + data_len)) {
-			data_length -= (current_address + 0x10) - (address + data_len);
+		data_length = 0x10;
+		if ((current_aligned_address + 0x10) > (address + data_len)) {
+			data_length -= (current_aligned_address + 0x10) - (address + data_len);
 		}
-		char* buffer_ptr = (char*)buffer;
+		unsigned char* buffer_ptr = (unsigned char*)buffer;
 		// Possible endianness issue using memcpy to copy into uint32_t buffer - TEST THIS!!
+		for (uint32_t i = data_offset; i < data_length; i++) {
+			buffer_ptr[i] = *data;
+		}
 		memcpy(buffer_ptr + data_offset, data, data_length);
 		data += data_length;
 		signed int retval;
-		retval = _write_to_flash_page(dap_con, current_address, buffer[0], buffer[1], buffer[2], buffer[3]);
+		retval = _write_to_flash_page(dap_con, current_aligned_address, buffer[0], buffer[1], buffer[2], buffer[3]);
 		if (retval) {
 			return retval;
 		}
-		current_address += 0x10;
+		current_aligned_address += 0x10;
+		*/
+	}
+
+	uint32_t end_address = address + data_len;
+	uint32_t remaining_bytes = end_address - current_aligned_address;
+	if (current_aligned_address != end_address) {
+		// TODO: Handle Return
+		_write_to_flash_page_partial(dap_con, current_aligned_address, data, remaining_bytes);
 	}
 
 	return 0;
