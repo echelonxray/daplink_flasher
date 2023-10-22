@@ -8,10 +8,17 @@
 signed int oper_write_reg(DAP_Connection* dap_con, unsigned int reg, uint32_t value) {
 	unsigned int tr_req;
 	tr_req = (reg & 0xC) | DAP_TRANSFER_MODE_WRITE;
+
+	// Is this an Access Port operation?
 	if (reg & OPER_REG_ACCESSMASK) {
+		// If it is an Access Port operation, is the address select register set correctly?
 		if (dap_con->sel_addr != (reg & 0xF0)) {
+			// If not, update it by recurring into this function.
+			// This won't cause an infinite recursion loop because the update is a
+			// Debug Port operation.  Not an Access Port operation.
 			oper_write_reg(dap_con, OPER_REG_DEBUG_SELECT, reg & 0xF0); // TODO: Handle Return Value
 		}
+
 		tr_req |= DAP_TRANSFER_ACCESS_PORT;
 	}
 
@@ -30,9 +37,14 @@ signed int oper_write_reg(DAP_Connection* dap_con, unsigned int reg, uint32_t va
 		                      transfer_request,
 		                      transfer_buffer);
 		if (retval) {
+			// Transfer Failure
 			return -1;
 		}
+		// Success
+
+		// Was this a Debug Port command to update the Access Port selection address?
 		if (tr_req == (DAP_TRANSFER_DEBUG_PORT | DAP_TRANSFER_MODE_WRITE | OPER_REG_DEBUG_SELECT)) {
+			// If so, update the saved address to the new value.
 			dap_con->sel_addr = value & 0xF0;
 		}
 	}
@@ -42,10 +54,15 @@ signed int oper_write_reg(DAP_Connection* dap_con, unsigned int reg, uint32_t va
 signed int oper_read_reg(DAP_Connection* dap_con, unsigned int reg, uint32_t* buffer) {
 	unsigned int tr_req;
 	tr_req = (reg & 0xC) | DAP_TRANSFER_MODE_READ;
+
+	// Is this an Access Port operation?
 	if (reg & OPER_REG_ACCESSMASK) {
+		// If it is an Access Port operation, is the address select register set correctly?
 		if (dap_con->sel_addr != (reg & 0xF0)) {
+			// If not, update it.
 			oper_write_reg(dap_con, OPER_REG_DEBUG_SELECT, reg & 0xF0); // TODO: Handle Return Value
 		}
+
 		tr_req |= DAP_TRANSFER_ACCESS_PORT;
 	}
 
@@ -64,8 +81,11 @@ signed int oper_read_reg(DAP_Connection* dap_con, unsigned int reg, uint32_t* bu
 		                      transfer_request,
 		                      transfer_buffer);
 		if (retval) {
+			// Transfer Failure
 			return -1;
 		}
+		// Success
+
 		*buffer = transfer_buffer[0];
 	}
 

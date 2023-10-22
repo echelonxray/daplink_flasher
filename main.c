@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <string.h>
+//#include <string.h>
 #include <errno.h>
 #include <assert.h>
 #include <sys/ioctl.h>

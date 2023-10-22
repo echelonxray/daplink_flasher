@@ -3,7 +3,7 @@
 #include "../dapctl/dap_oper.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+//#include <string.h>
 #include <assert.h>
 
 #define FLC0_BASE 0x40029000
