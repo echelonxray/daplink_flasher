@@ -372,6 +372,7 @@ static signed int oper_program_flash(DAP_Connection* dap_con, uint32_t address, 
 */
 
 static signed int reset(DAP_Connection* dap_con, int halt) {
+	// TODO: Handle Return Values
 	if (halt) {
 		oper_write_mem32(dap_con, 0xE000EDF0, 0xA05F0003);
 		uint32_t debugreg_demcr;
