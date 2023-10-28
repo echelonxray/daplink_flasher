@@ -1,6 +1,6 @@
 #include "../main.h"
+#include "../dapctl.h"
 #include "../chips.h"
-#include "../dapctl/dap_oper.h"
 #include <stdio.h>
 #include <stdlib.h>
 //#include <string.h>

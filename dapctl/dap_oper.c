@@ -1,6 +1,6 @@
 #include "../main.h"
-#include "../chips.h"
 #include "dap_oper.h"
+#include "../chips.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -318,9 +318,7 @@ signed int oper_read_memblock32(DAP_Connection* dap_con, uint32_t address, uint3
 	return 0;
 }
 
-signed int oper_init(DAP_Connection* dap_con, libusb_device_handle* d_handle) {
-	dap_con->device_handle = d_handle;
-
+signed int oper_init(DAP_Connection* dap_con) {
 	// Connect
 	{
 		signed int retval;

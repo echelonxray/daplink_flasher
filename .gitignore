@@ -1,7 +1,7 @@
-/daplink_flasher.dynamic
-/daplink_flasher.dynamic.strip
-/daplink_flasher.static
-/daplink_flasher.static.strip
+/daptool.dynamic
+/daptool.dynamic.strip
+/daptool.static
+/daptool.static.strip
 
 *.d
 *.o

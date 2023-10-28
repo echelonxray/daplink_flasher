@@ -1,8 +1,8 @@
-#ifndef _HEADERINC_OPERATIONS_H
-#define _HEADERINC_OPERATIONS_H
+#ifndef _HEADERINC_DAPCTL_OPERATIONS_H
+#define _HEADERINC_DAPCTL_OPERATIONS_H
 
 #include "../main.h"
-#include "dap_cmds.h"
+#include "../dapctl.h"
 #include <stdint.h>
 #include <libusb-1.0/libusb.h>
 
@@ -42,7 +42,7 @@ signed int oper_read_mem32(DAP_Connection* dap_con, uint32_t address, uint32_t* 
 signed int oper_write_memblock32(DAP_Connection* dap_con, uint32_t address, uint32_t* values, uint32_t buffer_length);
 signed int oper_read_memblock32(DAP_Connection* dap_con, uint32_t address, uint32_t* buffer, uint32_t buffer_length);
 
-signed int oper_init(DAP_Connection* dap_con, libusb_device_handle* d_handle);
+signed int oper_init(DAP_Connection* dap_con);
 signed int oper_destroy(DAP_Connection* dap_con);
 
 #endif

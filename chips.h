@@ -2,6 +2,7 @@
 #define _HEADERINC_CHIPS_H
 
 #include "main.h"
+#include "dapctl.h"
 #include <stdint.h>
 #include <stddef.h>
 #include <libusb-1.0/libusb.h>
@@ -24,9 +25,9 @@ signed int chip_write_to_flash_page(DAP_Connection* dap_con, uint32_t address, u
 
 signed int chip_reset(DAP_Connection* dap_con, int halt);
 
-signed int chip_conn_init(DAP_Connection* dap_con, libusb_device_handle* d_handle);
+signed int chip_conn_init(DAP_Connection* dap_con);
 signed int chip_conn_destroy(DAP_Connection* dap_con);
 
-signed int chips_find(DAP_Connection* dap_con, char* chipname);
+signed int chips_find(DAP_Connection* dap_con, const char* chipname);
 
 #endif

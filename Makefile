@@ -7,13 +7,15 @@ CFLAGS        := $(CFLAGS) -Wall -Wextra -Wno-unused-parameter -g # Set build wa
 CFLAGS        := $(CFLAGS) -std=c99 # The standards to build to.
 CFLAGS        := $(CFLAGS) -fno-stack-check -fno-stack-protector -fomit-frame-pointer -ffunction-sections -flto
 CFLAGS        := $(CFLAGS) -O3 -MMD
-TARGET        := daplink_flasher
+TARGET        := daptool
 
 DEFINES       :=
 TAG           :=
 
 GFILES        :=
 GFILES        := $(GFILES) main.o
+GFILES        := $(GFILES) dapctl.o
+GFILES        := $(GFILES) errors.o
 GFILES        := $(GFILES) chips.o
 GFILES        := $(GFILES) probes.o
 GFILES        := $(GFILES) dapctl/dap_link.o

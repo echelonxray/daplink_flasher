@@ -2,7 +2,8 @@
 #define _HEADERINC_MODE_FLASH_H
 
 #include "../main.h"
+#include "../dapctl.h"
 
-signed int mode_flash(int argc, const char* argv[], int curr_index);
+signed int mode_flash(DAP_Connection* dap_con);
 
 #endif

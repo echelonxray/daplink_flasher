@@ -21,7 +21,7 @@ typedef struct {
 	short int type;
 } ImageParam;
 
-signed int mode_flash(int argc, const char* argv[], int curr_index) {
+signed int mode_flash(DAP_Connection* dap_con) {
 	size_t imagecount = 0;
 	ImageParam* imagelist = NULL;
 

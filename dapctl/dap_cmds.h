@@ -1,7 +1,8 @@
-#ifndef _HEADERINC_DAP_H
-#define _HEADERINC_DAP_H
+#ifndef _HEADERINC_DAPCTL_CMD_H
+#define _HEADERINC_DAPCTL_CMD_H
 
 #include "../main.h"
+#include "../dapctl.h"
 #include <stdint.h>
 
 #define DAP_STATUS_OK    0x00

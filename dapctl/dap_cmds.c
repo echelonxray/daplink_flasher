@@ -1,6 +1,5 @@
 #include "../main.h"
 #include "dap_cmds.h"
-#include "dap_link.h"
 #include <stdio.h>
 //#include <string.h>
 
@@ -14,13 +13,13 @@ signed int dap_info(DAP_Connection* dap_con, unsigned int id) {
 	data[0] = DAP_INFO;
 	data[1] = id;
 
-	retval = link_send_data(dap_con->device_handle, data, 2);
+	retval = link_send_data(dap_con, data, 2);
 	if (retval < 0) {
 		//printf("Error: dap_info(): link_send_data() failed.\n");
 		return -1;
 	}
 
-	retval = link_receive_data(dap_con->device_handle, data, LINK_BUFFER_LENGTH);
+	retval = link_receive_data(dap_con, data, LINK_BUFFER_LENGTH);
 	if (retval < 0) {
 		//printf("Error: dap_info(): link_receive_data() failed.\n");
 		return -2;
@@ -48,13 +47,13 @@ signed int dap_connect(DAP_Connection* dap_con, unsigned int mode) {
 	data[0] = DAP_CONNECT;
 	data[1] = mode;
 
-	retval = link_send_data(dap_con->device_handle, data, 2);
+	retval = link_send_data(dap_con, data, 2);
 	if (retval < 0) {
 		//printf("Error: dap_connect(): link_send_data() failed.\n");
 		return -1;
 	}
 
-	retval = link_receive_data(dap_con->device_handle, data, LINK_BUFFER_LENGTH);
+	retval = link_receive_data(dap_con, data, LINK_BUFFER_LENGTH);
 	if (retval < 0) {
 		//printf("Error: dap_connect(): link_receive_data() failed.\n");
 		return -2;
@@ -84,13 +83,13 @@ signed int dap_disconnect(DAP_Connection* dap_con) {
 	//memset(data, 0, LINK_BUFFER_LENGTH);
 	data[0] = DAP_DISCONNECT;
 
-	retval = link_send_data(dap_con->device_handle, data, 1);
+	retval = link_send_data(dap_con, data, 1);
 	if (retval < 0) {
 		//printf("Error: dap_disconnect(): link_send_data() failed.\n");
 		return -1;
 	}
 
-	retval = link_receive_data(dap_con->device_handle, data, LINK_BUFFER_LENGTH);
+	retval = link_receive_data(dap_con, data, LINK_BUFFER_LENGTH);
 	if (retval < 0) {
 		//printf("Error: dap_disconnect(): link_receive_data() failed.\n");
 		return -2;
@@ -150,13 +149,13 @@ signed int dap_transfer(DAP_Connection* dap_con, unsigned int dap_index, unsigne
 		}
 	}
 
-	retval = link_send_data(dap_con->device_handle, data, j);
+	retval = link_send_data(dap_con, data, j);
 	if (retval < 0) {
 		//printf("Error: dap_transfer(): link_send_data() failed.\n");
 		return -1;
 	}
 
-	retval = link_receive_data(dap_con->device_handle, data, LINK_BUFFER_LENGTH);
+	retval = link_receive_data(dap_con, data, LINK_BUFFER_LENGTH);
 	if (retval < 0) {
 		//printf("Error: dap_transfer(): link_receive_data() failed.\n");
 		return -2;
@@ -212,13 +211,13 @@ signed int dap_swj_sequence(DAP_Connection* dap_con, unsigned int bit_count, uns
 		data[2 + i] = data_buffer[i];
 	}
 
-	retval = link_send_data(dap_con->device_handle, data, 2 + i);
+	retval = link_send_data(dap_con, data, 2 + i);
 	if (retval < 0) {
 		//printf("Error: dap_swj_sequence(): link_send_data() failed.\n");
 		return -1;
 	}
 
-	retval = link_receive_data(dap_con->device_handle, data, LINK_BUFFER_LENGTH);
+	retval = link_receive_data(dap_con, data, LINK_BUFFER_LENGTH);
 	if (retval < 0) {
 		//printf("Error: dap_swj_sequence(): link_receive_data() failed.\n");
 		return -2;

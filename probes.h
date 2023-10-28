@@ -2,7 +2,8 @@
 #define _HEADERINC_PROBES_H
 
 #include "main.h"
+#include "dapctl.h"
 
-signed int probes_find(DAP_Connection* dap_con, char* probename);
+signed int probes_find(DAP_Connection* dap_con, const char* probename);
 
 #endif
