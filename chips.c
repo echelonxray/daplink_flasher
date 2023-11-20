@@ -22,6 +22,18 @@ signed int chip_write_to_flash_page(DAP_Connection* dap_con, uint32_t address, u
     chips_write_to_flash_page = dap_con->chip_pfns.chips_write_to_flash_page;
     return chips_write_to_flash_page(dap_con, address, data, data_len);
 }
+signed int chip_write_to_flash(DAP_Connection* dap_con, uint32_t address, unsigned char* data, size_t data_len) {
+    if (data_len == 0) {
+        return 0;
+    }
+    if ((address + data_len) < address) {
+        // Overflow
+        return -1;
+    }
+    ChipsWriteToFlashPage_PFN chips_write_to_flash;
+    chips_write_to_flash = dap_con->chip_pfns.chips_write_to_flash;
+    return chips_write_to_flash(dap_con, address, data, data_len);
+}
 
 signed int chip_reset(DAP_Connection* dap_con, int halt){
     ChipsReset_PFN chips_reset;

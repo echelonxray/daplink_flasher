@@ -7,6 +7,7 @@
 typedef struct {
     void* chips_erase_flash_page;
     void* chips_write_to_flash_page;
+    void* chips_write_to_flash;
     void* chips_reset;
     void* chips_conn_init;
     void* chips_conn_destroy;

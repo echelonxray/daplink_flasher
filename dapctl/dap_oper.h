@@ -39,7 +39,11 @@ signed int oper_read_mem16(DAP_Connection* dap_con, uint32_t address, uint16_t* 
 signed int oper_write_mem32(DAP_Connection* dap_con, uint32_t address, uint32_t value);
 signed int oper_read_mem32(DAP_Connection* dap_con, uint32_t address, uint32_t* buffer);
 
+signed int oper_write_memblock08(DAP_Connection* dap_con, uint32_t address,  uint8_t* values, uint32_t buffer_length);
+signed int oper_write_memblock16(DAP_Connection* dap_con, uint32_t address, uint16_t* values, uint32_t buffer_length);
 signed int oper_write_memblock32(DAP_Connection* dap_con, uint32_t address, uint32_t* values, uint32_t buffer_length);
+signed int oper_read_memblock08(DAP_Connection* dap_con, uint32_t address,  uint8_t* buffer, uint32_t buffer_length);
+signed int oper_read_memblock16(DAP_Connection* dap_con, uint32_t address, uint16_t* buffer, uint32_t buffer_length);
 signed int oper_read_memblock32(DAP_Connection* dap_con, uint32_t address, uint32_t* buffer, uint32_t buffer_length);
 
 signed int oper_init(DAP_Connection* dap_con);

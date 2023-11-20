@@ -23,6 +23,8 @@ typedef signed int (*ChipsConnDestroy_PFN)(DAP_Connection* dap_con);
 signed int chip_erase_flash_page(DAP_Connection* dap_con, uint32_t address);
 signed int chip_write_to_flash_page(DAP_Connection* dap_con, uint32_t address, unsigned char* data, size_t data_len);
 
+signed int chip_write_to_flash(DAP_Connection* dap_con, uint32_t address, unsigned char* data, size_t data_len);
+
 signed int chip_reset(DAP_Connection* dap_con, int halt);
 
 signed int chip_conn_init(DAP_Connection* dap_con);

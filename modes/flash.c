@@ -1,9 +1,11 @@
 #include "../main.h"
 #include "flash.h"
+#include "../chips.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <assert.h>
 #include <errno.h>
 #include <limits.h>
 #include <fcntl.h>
@@ -21,7 +23,85 @@ typedef struct {
 	short int type;
 } ImageParam;
 
+extern RawParameters raw_params;
+
 signed int mode_flash(DAP_Connection* dap_con) {
+	// TODO: Check and validate parameters
+	
+	// TODO: Make proper error handling
+	uint32_t load_offset = strtol(raw_params.image_offset, NULL, 0);
+	if (strcmp(raw_params.image_format, "binary")) {
+		// TODO: Make proper error handling
+		dprintf(STDERR, "Error: unrecognized format: \"%s\"", raw_params.image_format);
+		exit(1);
+	}
+	
+	dprintf(STDOUT, "raw_params.image_path: \"%s\"\n", raw_params.image_path);
+	dprintf(STDOUT, "raw_params.image_format: \"%s\"\n", raw_params.image_format);
+	dprintf(STDOUT, "raw_params.image_offset: \"%s\"\n", raw_params.image_offset);
+	dprintf(STDOUT, "load_offset: \"0x%08X\"\n", load_offset);
+	dprintf(STDOUT, "usbvid: \"0x%04X\"\n", dap_con->usbvid);
+	dprintf(STDOUT, "usbpid: \"0x%04X\"\n", dap_con->usbpid);
+	return 0;
+	
+	signed int fd;
+	fd = open(raw_params.image_path, O_RDONLY);
+	if (fd < 0) {
+		// TODO: Make proper error handling
+		dprintf(STDERR, "Error: open(\"%s\", O_RDONLY)", raw_params.image_path);
+		exit(1);
+	}
+	
+	struct stat statbuf;
+	signed int retval;
+	retval = fstat(fd, &statbuf);
+	if (retval < 0) {
+		// TODO: Make proper error handling
+		dprintf(STDERR, "Error: fstat\n");
+		exit(1);
+	}
+	
+	void* image_data = malloc(statbuf.st_size);
+	if (image_data == NULL) {
+		// TODO: Make proper error handling
+		dprintf(STDERR, "Error: malloc()\n");
+		exit(1);
+	}
+	
+	ssize_t image_size;
+	image_size = read(fd, image_data, statbuf.st_size);
+	if (image_size != statbuf.st_size) {
+		// TODO: Make proper error handling
+		dprintf(STDERR, "Error: read()\n");
+		exit(1);
+	}
+	
+	close(fd);
+	
+	retval = link_find_and_connect(dap_con, dap_con->usbvid, dap_con->usbpid);
+	if (!retval) {
+		// TODO: Make proper error handling
+		dprintf(STDERR, "Error: link_find_and_connect()\n");
+		exit(1);
+	}
+	
+	assert(! chip_conn_init(dap_con) );
+	
+	assert(! chip_write_to_flash(dap_con, load_offset, image_data, image_size) );
+	
+	assert(! chip_conn_destroy(dap_con) );
+	
+	retval = link_disconnect(dap_con);
+	if (!retval) {
+		// TODO: Make proper error handling
+		dprintf(STDERR, "Error: link_disconnect()\n");
+	}
+	
+	free(image_data);
+	
+	return 0;
+	
+	/*
 	size_t imagecount = 0;
 	ImageParam* imagelist = NULL;
 
@@ -195,6 +275,7 @@ signed int mode_flash(DAP_Connection* dap_con) {
 		free(imagelist[i].data);
 	}
 	free(imagelist);
+	*/
 
-	return 0;
+	//return 0;
 }

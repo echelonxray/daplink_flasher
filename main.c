@@ -134,7 +134,7 @@ char* splitstr(char* str, char separator) {
 signed int parse_general_params(int argc, const char* argv[], DAP_Connection* dap_con) {
 	for (int i = 0; i < argc; i++) {
 		const char* arg = argv[i];
-		if        (strcmp(arg, "-h") == 0 || strcmp(arg, "-?") || strcmp(arg, "--help") == 0) {
+		if        (strcmp(arg, "-h") == 0 || strcmp(arg, "-?") == 0 || strcmp(arg, "--help") == 0) {
 			PRINT_USAGE();
 		} else if (strcmp(arg, "--") == 0) {
 			break;
@@ -261,12 +261,18 @@ int main(int argc, const char* argv[]) {
 	DAP_Connection dap_connection;
 	dap_connection.usbvid_str = NULL;
 	dap_connection.usbpid_str = NULL;
+	dap_connection.usbvid = 0;
+	dap_connection.usbpid = 0;
+	dap_connection.sel_addr = 0;
+	// TODO: Handle Return
 	parse_general_params(argc - 2, argv + 2, &dap_connection);
 
-	signed int retval;
+	//signed int retval;
 	if        (strcmp(argv[1], "flash") == 0) {
-		retval = mode_flash(&dap_connection);
+		//retval = mode_flash(&dap_connection);
+		mode_flash(&dap_connection);
 	} else {
+		// TODO
 	}
 
 	free(raw_params.image_buffer);

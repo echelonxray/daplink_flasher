@@ -259,6 +259,62 @@ signed int oper_read_mem32(DAP_Connection* dap_con, uint32_t address, uint32_t* 
 	return 0;
 }
 
+signed int oper_write_memblock08(DAP_Connection* dap_con, uint32_t address, uint8_t* values, uint32_t buffer_length) {
+	if (address & 0x3) {
+		//dprintf(STDOUT, "Error: oper_write_memblock32(): Address Misaligned: 0x%08X.\n", address);
+		return -5;
+	}
+
+	// Transfer - Set 1 byte address mode.  Enable auto-increment mode.
+	{
+		signed int retval;
+		retval = oper_write_reg(dap_con, OPER_REG_ACCESS_CSW, OPER_REG_ACCESS_CSWMODE_08BITADDR |
+		                                                      OPER_REG_ACCESS_CSWMODE_AUTOINC);
+		assert(retval == 0);
+	}
+	// Transfer - Set address
+	{
+		signed int retval;
+		retval = oper_write_reg(dap_con, OPER_REG_ACCESS_TAR, address);
+		assert(retval == 0);
+	}
+	// Transfer - Write to address
+	for (uint32_t i = 0; i < buffer_length; i++) {
+		signed int retval;
+		retval = oper_write_reg(dap_con, OPER_REG_ACCESS_DRW, values[i]);
+		assert(retval == 0);
+	}
+
+	return 0;
+}
+signed int oper_write_memblock16(DAP_Connection* dap_con, uint32_t address, uint16_t* values, uint32_t buffer_length) {
+	if (address & 0x3) {
+		//dprintf(STDOUT, "Error: oper_write_memblock32(): Address Misaligned: 0x%08X.\n", address);
+		return -5;
+	}
+
+	// Transfer - Set 2 byte address mode.  Enable auto-increment mode.
+	{
+		signed int retval;
+		retval = oper_write_reg(dap_con, OPER_REG_ACCESS_CSW, OPER_REG_ACCESS_CSWMODE_16BITADDR |
+		                                                      OPER_REG_ACCESS_CSWMODE_AUTOINC);
+		assert(retval == 0);
+	}
+	// Transfer - Set address
+	{
+		signed int retval;
+		retval = oper_write_reg(dap_con, OPER_REG_ACCESS_TAR, address);
+		assert(retval == 0);
+	}
+	// Transfer - Write to address
+	for (uint32_t i = 0; i < buffer_length; i++) {
+		signed int retval;
+		retval = oper_write_reg(dap_con, OPER_REG_ACCESS_DRW, values[i]);
+		assert(retval == 0);
+	}
+
+	return 0;
+}
 signed int oper_write_memblock32(DAP_Connection* dap_con, uint32_t address, uint32_t* values, uint32_t buffer_length) {
 	if (address & 0x3) {
 		//dprintf(STDOUT, "Error: oper_write_memblock32(): Address Misaligned: 0x%08X.\n", address);
@@ -283,6 +339,66 @@ signed int oper_write_memblock32(DAP_Connection* dap_con, uint32_t address, uint
 		signed int retval;
 		retval = oper_write_reg(dap_con, OPER_REG_ACCESS_DRW, values[i]);
 		assert(retval == 0);
+	}
+
+	return 0;
+}
+signed int oper_read_memblock08(DAP_Connection* dap_con, uint32_t address, uint8_t* buffer, uint32_t buffer_length) {
+	if (address & 0x3) {
+		//dprintf(STDOUT, "Error: oper_read_memblock32(): Address Misaligned: 0x%08X.\n", address);
+		return -5;
+	}
+
+	// Transfer - Set 1 byte address mode.  Enable auto-increment mode.
+	{
+		signed int retval;
+		retval = oper_write_reg(dap_con, OPER_REG_ACCESS_CSW, OPER_REG_ACCESS_CSWMODE_08BITADDR |
+		                                                      OPER_REG_ACCESS_CSWMODE_AUTOINC);
+		assert(retval == 0);
+	}
+	// Transfer - Set address
+	{
+		signed int retval;
+		retval = oper_write_reg(dap_con, OPER_REG_ACCESS_TAR, address);
+		assert(retval == 0);
+	}
+	// Transfer - Read from address
+	for (uint32_t i = 0; i < buffer_length; i++) {
+		signed int retval;
+		uint32_t tmp;
+		retval = oper_read_reg(dap_con, OPER_REG_ACCESS_DRW, &tmp);
+		assert(retval == 0);
+		buffer[i] = tmp;
+	}
+
+	return 0;
+}
+signed int oper_read_memblock16(DAP_Connection* dap_con, uint32_t address, uint16_t* buffer, uint32_t buffer_length) {
+	if (address & 0x3) {
+		//dprintf(STDOUT, "Error: oper_read_memblock32(): Address Misaligned: 0x%08X.\n", address);
+		return -5;
+	}
+
+	// Transfer - Set 2 byte address mode.  Enable auto-increment mode.
+	{
+		signed int retval;
+		retval = oper_write_reg(dap_con, OPER_REG_ACCESS_CSW, OPER_REG_ACCESS_CSWMODE_16BITADDR |
+		                                                      OPER_REG_ACCESS_CSWMODE_AUTOINC);
+		assert(retval == 0);
+	}
+	// Transfer - Set address
+	{
+		signed int retval;
+		retval = oper_write_reg(dap_con, OPER_REG_ACCESS_TAR, address);
+		assert(retval == 0);
+	}
+	// Transfer - Read from address
+	for (uint32_t i = 0; i < buffer_length; i++) {
+		signed int retval;
+		uint32_t tmp;
+		retval = oper_read_reg(dap_con, OPER_REG_ACCESS_DRW, &tmp);
+		assert(retval == 0);
+		buffer[i] = tmp;
 	}
 
 	return 0;
