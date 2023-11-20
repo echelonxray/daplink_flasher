@@ -387,7 +387,7 @@ static signed int write_to_flash(DAP_Connection* dap_con, uint32_t address, unsi
 				buffer_ptr++;
 			}
 			// TODO: Handle Return
-			_write_to_flash_page(dap_con, current_aligned_address, buffer[0], buffer[1], buffer[2], buffer[3]);
+			_write_to_flash_page(dap_con, current_aligned_address + i, buffer[0], buffer[1], buffer[2], buffer[3]);
 		}
 		current_aligned_address += page_size;
 	}

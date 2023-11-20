@@ -42,7 +42,7 @@ signed int mode_flash(DAP_Connection* dap_con) {
 	dprintf(STDOUT, "load_offset: \"0x%08X\"\n", load_offset);
 	dprintf(STDOUT, "usbvid: \"0x%04X\"\n", dap_con->usbvid);
 	dprintf(STDOUT, "usbpid: \"0x%04X\"\n", dap_con->usbpid);
-	return 0;
+	//return 0;
 	
 	signed int fd;
 	fd = open(raw_params.image_path, O_RDONLY);
@@ -79,7 +79,7 @@ signed int mode_flash(DAP_Connection* dap_con) {
 	close(fd);
 	
 	retval = link_find_and_connect(dap_con, dap_con->usbvid, dap_con->usbpid);
-	if (!retval) {
+	if (retval) {
 		// TODO: Make proper error handling
 		dprintf(STDERR, "Error: link_find_and_connect()\n");
 		exit(1);
@@ -92,7 +92,7 @@ signed int mode_flash(DAP_Connection* dap_con) {
 	assert(! chip_conn_destroy(dap_con) );
 	
 	retval = link_disconnect(dap_con);
-	if (!retval) {
+	if (retval) {
 		// TODO: Make proper error handling
 		dprintf(STDERR, "Error: link_disconnect()\n");
 	}
