@@ -18,6 +18,7 @@ GFILES        := $(GFILES) dapctl.o
 GFILES        := $(GFILES) errors.o
 GFILES        := $(GFILES) chips.o
 GFILES        := $(GFILES) probes.o
+GFILES        := $(GFILES) dapctl.o
 GFILES        := $(GFILES) dapctl/dap_link.o
 GFILES        := $(GFILES) dapctl/dap_cmds.o
 GFILES        := $(GFILES) dapctl/dap_oper.o
