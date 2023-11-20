@@ -43,7 +43,7 @@ clean:
 	rm -f $(addsuffix .d,$(FILES_BASE))
 
 %.o: %.c
-	$(CC) $(CFLAGS) -c $^ -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(TARGET).dynamic: $(GFILES)
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
@@ -55,4 +55,4 @@ $(TARGET).static: $(GFILES)
 	$(STRIP) -s -x -R .comment $^ -o $@
 
 # Header dependency tracking
--include $(addsuffix .$(TAG).d,$(GFILES))
+-include $(addsuffix .d,$(FILES_BASE))
