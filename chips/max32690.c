@@ -3,7 +3,7 @@
 #include "../chips.h"
 #include <stdio.h>
 #include <stdlib.h>
-//#include <string.h>
+#include <string.h>
 #include <assert.h>
 
 #define FLC0_BASE 0x40029000
@@ -63,9 +63,12 @@ static signed int erase_flash_page(DAP_Connection* dap_con, uint32_t address) {
 		page_size = 0x2000;
 		controller_address = 0x40029400;
 	} else {
+		// TODO
 		//dprintf(STDOUT, "Error: oper_erase_flash_page(): Address Out of Range: 0x%08X.\n", address);
 		return -5;
 	}
+	
+	dprintf(STDERR, "[STATUS] Erasing page at address 0x%08X of size 0x%04X\n", address, page_size);
 
 	address &= ~(page_size - 1); // Technically not needed.  Align address to page.
 
@@ -125,6 +128,8 @@ static signed int _write_to_flash_page(DAP_Connection* dap_con, uint32_t address
 		return -5;
 	}
 
+	dprintf(STDERR, "[STATUS] Writing 4 bytes at address 0x%08X\n", address);
+
 	//if (address & (0x10 - 1)) {
 	//	//dprintf(STDOUT, "Error: oper_write_flash_page(): Address Misaligned: 0x%08X.\n", address);
 	//	return -5;
@@ -181,7 +186,7 @@ static signed int _write_to_flash_page(DAP_Connection* dap_con, uint32_t address
 
 	return 0;
 }
-static signed int _write_to_flash_page_partial(DAP_Connection* dap_con, uint32_t address, unsigned char* data, size_t data_len) {
+static signed int _write_to_flash_page_partial(DAP_Connection* dap_con, uint32_t address, unsigned char* data, size_t data_len, int do_preserve) {
 	uint32_t aligned_address;
 	uint32_t start_skip_count;
 
@@ -189,7 +194,12 @@ static signed int _write_to_flash_page_partial(DAP_Connection* dap_con, uint32_t
 	start_skip_count = address - aligned_address;
 
 	uint32_t buffer[4];
-	oper_read_memblock32(dap_con, aligned_address, buffer, 4);
+	if (do_preserve) {
+		// TODO: Handle Return
+		oper_read_memblock32(dap_con, aligned_address, buffer, 4);
+	} else {
+		memset(buffer, 0xFF, sizeof(buffer));
+	}
 
 	unsigned char* buffer_ptr = (unsigned char*)buffer;
 	buffer_ptr += start_skip_count;
@@ -203,7 +213,7 @@ static signed int _write_to_flash_page_partial(DAP_Connection* dap_con, uint32_t
 
 	return 0;
 }
-static signed int write_to_flash_page(DAP_Connection* dap_con, uint32_t address, unsigned char* data, size_t data_len) {
+static signed int write_to_flash_page(DAP_Connection* dap_con, uint32_t address, unsigned char* data, size_t data_len, int do_preserve) {
 	// Does not need to handle data_len == 0.
 	// Does not need to handle address + data_len type overflow.
 	// These cases are checked in the wrapper function.
@@ -223,7 +233,7 @@ static signed int write_to_flash_page(DAP_Connection* dap_con, uint32_t address,
 
 	if (start_aligned_address == end_aligned_address) {
 		// TODO: Handle Return
-		_write_to_flash_page_partial(dap_con, address, data, data_len);
+		_write_to_flash_page_partial(dap_con, address, data, data_len, do_preserve);
 		return 0;
 	}
 
@@ -234,7 +244,7 @@ static signed int write_to_flash_page(DAP_Connection* dap_con, uint32_t address,
 		uint32_t part_length;
 		part_length = 0x10 - (address - current_aligned_address);
 		// TODO: Handle Return
-		_write_to_flash_page_partial(dap_con, address, data, part_length);
+		_write_to_flash_page_partial(dap_con, address, data, part_length, do_preserve);
 		data += part_length;
 		current_aligned_address += 0x10;
 	}
@@ -293,11 +303,12 @@ static signed int write_to_flash_page(DAP_Connection* dap_con, uint32_t address,
 	uint32_t remaining_bytes = end_address - current_aligned_address;
 	if (current_aligned_address != end_address) {
 		// TODO: Handle Return
-		_write_to_flash_page_partial(dap_con, current_aligned_address, data, remaining_bytes);
+		_write_to_flash_page_partial(dap_con, current_aligned_address, data, remaining_bytes, do_preserve);
 	}
 
 	return 0;
 }
+
 static uint32_t _get_page_size(uint32_t address) {
 	if (address < 0x10300000) {
 		return 0x4000;
@@ -332,13 +343,13 @@ static signed int _write_to_flash_partial(DAP_Connection* dap_con, uint32_t addr
 	// TODO: Handle Return Value
 	erase_flash_page(dap_con, page_aligned_address);
 	// TODO: Handle Return Value
-	write_to_flash_page(dap_con, page_aligned_address, buffer, page_size);
+	write_to_flash_page(dap_con, page_aligned_address, buffer, page_size, 1);
 	
 	free(buffer);
 	
 	return 0;
 }
-static signed int write_to_flash(DAP_Connection* dap_con, uint32_t address, unsigned char* data, size_t data_len) {
+static signed int write_to_flash(DAP_Connection* dap_con, uint32_t address, unsigned char* data, size_t data_len, int do_preserve) {
 	// Does not need to handle data_len == 0.
 	// Does not need to handle address + data_len type overflow.
 	// These cases are checked in the wrapper function.
@@ -357,8 +368,15 @@ static signed int write_to_flash(DAP_Connection* dap_con, uint32_t address, unsi
 	end_aligned_address &= ~(_get_page_size(end_aligned_address) - 1);
 
 	if (start_aligned_address == end_aligned_address) {
-		// TODO: Handle Return
-		_write_to_flash_partial(dap_con, address, data, data_len);
+		if (do_preserve) {
+			// TODO: Handle Return
+			_write_to_flash_partial(dap_con, address, data, data_len);
+		} else {
+			// TODO: Handle Return
+			erase_flash_page(dap_con, start_aligned_address);
+			// TODO: Handle Return
+			write_to_flash_page(dap_con, address, data, data_len, do_preserve);
+		}
 		return 0;
 	}
 
@@ -366,10 +384,17 @@ static signed int write_to_flash(DAP_Connection* dap_con, uint32_t address, unsi
 	current_aligned_address = start_aligned_address;
 
 	if (current_aligned_address != address) {
-		// TODO: Handle Return
 		uint32_t part_length;
 		part_length = _get_page_size(current_aligned_address) - (address - current_aligned_address);
-		_write_to_flash_partial(dap_con, address, data, part_length);
+		if (do_preserve) {
+			// TODO: Handle Return
+			_write_to_flash_partial(dap_con, address, data, part_length);
+		} else {
+			// TODO: Handle Return
+			erase_flash_page(dap_con, current_aligned_address);
+			// TODO: Handle Return
+			write_to_flash_page(dap_con, address, data, part_length, do_preserve);
+		}
 		data += part_length;
 		current_aligned_address += 0x10;
 	}
@@ -395,8 +420,15 @@ static signed int write_to_flash(DAP_Connection* dap_con, uint32_t address, unsi
 	uint32_t end_address = address + data_len;
 	uint32_t remaining_bytes = end_address - current_aligned_address;
 	if (current_aligned_address != end_address) {
-		// TODO: Handle Return
-		_write_to_flash_partial(dap_con, current_aligned_address, data, remaining_bytes);
+		if (do_preserve) {
+			// TODO: Handle Return
+			_write_to_flash_partial(dap_con, current_aligned_address, data, remaining_bytes);
+		} else {
+			// TODO: Handle Return
+			erase_flash_page(dap_con, current_aligned_address);
+			// TODO: Handle Return
+			write_to_flash_page(dap_con, current_aligned_address, data, remaining_bytes, do_preserve);
+		}
 	}
 
 	return 0;

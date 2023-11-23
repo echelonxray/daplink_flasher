@@ -10,7 +10,7 @@ signed int chip_erase_flash_page(DAP_Connection* dap_con, uint32_t address) {
     chips_erase_flash_page = dap_con->chip_pfns.chips_erase_flash_page;
     return chips_erase_flash_page(dap_con, address);
 }
-signed int chip_write_to_flash_page(DAP_Connection* dap_con, uint32_t address, unsigned char* data, size_t data_len) {
+signed int chip_write_to_flash_page(DAP_Connection* dap_con, uint32_t address, unsigned char* data, size_t data_len, int do_preserve) {
     if (data_len == 0) {
         return 0;
     }
@@ -20,9 +20,9 @@ signed int chip_write_to_flash_page(DAP_Connection* dap_con, uint32_t address, u
     }
     ChipsWriteToFlashPage_PFN chips_write_to_flash_page;
     chips_write_to_flash_page = dap_con->chip_pfns.chips_write_to_flash_page;
-    return chips_write_to_flash_page(dap_con, address, data, data_len);
+    return chips_write_to_flash_page(dap_con, address, data, data_len, do_preserve);
 }
-signed int chip_write_to_flash(DAP_Connection* dap_con, uint32_t address, unsigned char* data, size_t data_len) {
+signed int chip_write_to_flash(DAP_Connection* dap_con, uint32_t address, unsigned char* data, size_t data_len, int do_preserve) {
     if (data_len == 0) {
         return 0;
     }
@@ -30,9 +30,9 @@ signed int chip_write_to_flash(DAP_Connection* dap_con, uint32_t address, unsign
         // Overflow
         return -1;
     }
-    ChipsWriteToFlashPage_PFN chips_write_to_flash;
+    ChipsWriteToFlash_PFN chips_write_to_flash;
     chips_write_to_flash = dap_con->chip_pfns.chips_write_to_flash;
-    return chips_write_to_flash(dap_con, address, data, data_len);
+    return chips_write_to_flash(dap_con, address, data, data_len, do_preserve);
 }
 
 signed int chip_reset(DAP_Connection* dap_con, int halt){

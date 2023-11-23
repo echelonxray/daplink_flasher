@@ -12,7 +12,14 @@ typedef signed int (*ChipsEraseFlashPage_PFN)(DAP_Connection* dap_con,
 typedef signed int (*ChipsWriteToFlashPage_PFN)(DAP_Connection* dap_con,
                                                 uint32_t address,
                                                 unsigned char* data,
-                                                size_t data_len);
+                                                size_t data_len,
+                                                int do_preserve);
+
+typedef signed int (*ChipsWriteToFlash_PFN)(DAP_Connection* dap_con,
+                                            uint32_t address,
+                                            unsigned char* data,
+                                            size_t data_len,
+                                            int do_preserve);
 
 typedef signed int (*ChipsReset_PFN)(DAP_Connection* dap_con,
                                      int halt);
@@ -21,9 +28,9 @@ typedef signed int (*ChipsConnInit_PFN)(DAP_Connection* dap_con);
 typedef signed int (*ChipsConnDestroy_PFN)(DAP_Connection* dap_con);
 
 signed int chip_erase_flash_page(DAP_Connection* dap_con, uint32_t address);
-signed int chip_write_to_flash_page(DAP_Connection* dap_con, uint32_t address, unsigned char* data, size_t data_len);
+signed int chip_write_to_flash_page(DAP_Connection* dap_con, uint32_t address, unsigned char* data, size_t data_len, int do_preserve);
 
-signed int chip_write_to_flash(DAP_Connection* dap_con, uint32_t address, unsigned char* data, size_t data_len);
+signed int chip_write_to_flash(DAP_Connection* dap_con, uint32_t address, unsigned char* data, size_t data_len, int do_preserve);
 
 signed int chip_reset(DAP_Connection* dap_con, int halt);
 

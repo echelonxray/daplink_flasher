@@ -87,7 +87,7 @@ signed int mode_flash(DAP_Connection* dap_con) {
 	
 	assert(! chip_conn_init(dap_con) );
 	
-	assert(! chip_write_to_flash(dap_con, load_offset, image_data, image_size) );
+	assert(! chip_write_to_flash(dap_con, load_offset, image_data, image_size, 0) );
 	
 	assert(! chip_conn_destroy(dap_con) );
 	
