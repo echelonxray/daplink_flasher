@@ -15,11 +15,9 @@
 #define VERBOSITY_VERBOSE 2
 #define VERBOSITY_DEBUG   3
 
-#define ERRH_MEMALLOC { dprintf(STDERR, "Error: Memory Allocation Failure.  File: \"%s\", Line: %d\n", __FILE__, __LINE__); exit(1); }
 #define HELP_REM "Use command flags \"--help\", \"-h\", or \"-?\" to show help and command usage information.\n"
 #define HELP_MSG "TODO: Help Message\n"
 
-#define PRINT_ERR(format_str, ...) { dprintf(STDERR, "Error [File: %s, Line: %d]: " format_str "\n", __FILE__, __LINE__ __VA_OPT__(,) __VA_ARGS__); }
 #define PRINT_USAGE() { /* TODO */ }
 
 typedef struct {

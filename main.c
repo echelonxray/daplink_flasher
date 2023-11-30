@@ -11,7 +11,6 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
-#include <assert.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <linux/hiddev.h>
@@ -147,13 +146,10 @@ signed int parse_general_params(int argc, const char* argv[], DAP_Connection* da
 }
 
 int main(int argc, const char* argv[]) {
-	//printf("[TRACE> File: \"%s\", Line Number: %d]\n", __FILE__, __LINE__);
-
 	verbosity = VERBOSITY_NORMAL;
 
 	if (argc < 2) {
 		PRINT_ERR("Insufficient arguments");
-		PRINT_USAGE();
 		return ERROR_MALFORMED_INPUT;
 	}
 
@@ -170,80 +166,24 @@ int main(int argc, const char* argv[]) {
 	dap_connection.usbvid = 0;
 	dap_connection.usbpid = 0;
 	dap_connection.sel_addr = 0;
-	// TODO: Handle Return
-	parse_general_params(argc - 2, argv + 2, &dap_connection);
 
-	//signed int retval;
+	signed int retval;
+	retval = parse_general_params(argc - 2, argv + 2, &dap_connection);
+	if (retval) {
+		free(raw_params.image_buffer);
+		RELAY_RETURN(retval);
+	}
+
 	if        (strcmp(argv[1], "flash") == 0) {
 		//retval = mode_flash(&dap_connection);
 		mode_flash(&dap_connection);
 	} else {
-		// TODO
+		free(raw_params.image_buffer);
+		PRINT_ERR("Unknown command mode: \"%s\"", argv[1]);
+		return ERROR_MALFORMED_INPUT;
 	}
 
 	free(raw_params.image_buffer);
-
-	/*
-	libusb_device **devs;
-	int r;
-	ssize_t cnt;
-
-	r = libusb_init(NULL);
-	if (r < 0) {
-		return r;
-	}
-
-	cnt = libusb_get_device_list(NULL, &devs);
-	if (cnt < 0){
-		libusb_exit(NULL);
-		return (int)cnt;
-	}
-	libusb_device_handle* d_handle = NULL;
-	{
-		libusb_device *dev;
-		int i = 0;
-
-		while ((dev = devs[i++]) != NULL) {
-			struct libusb_device_descriptor desc;
-			int r = libusb_get_device_descriptor(dev, &desc);
-			if (r < 0) {
-				fprintf(stderr, "failed to get device descriptor");
-				continue;
-			}
-
-			if (desc.idVendor == 0x0D28 && desc.idProduct == 0x0204) {
-				int retval;
-				retval = libusb_open(dev, &d_handle);
-				if (retval < 0) {
-					printf("Error: libusb_open(): (%d) \"%s\"\n", retval, libusb_strerror(retval));
-					exit(3);
-				}
-#ifdef __linux__
-				retval = libusb_detach_kernel_driver(d_handle, 3); // TODO: Reattach kernel driver
-				if (retval < 0) {
-					printf("Error: libusb_detach_kernel_driver(): (%d) \"%s\"\n", retval, libusb_strerror(retval));
-					//exit(3);
-				}
-#endif
-				retval = libusb_claim_interface(d_handle, 3);
-				if (retval < 0) {
-					printf("Error: libusb_claim_interface(): (%d) \"%s\"\n", retval, libusb_strerror(retval));
-					exit(3);
-				}
-
-				talk_to_dap(d_handle);
-
-				break;
-			}
-		}
-	}
-
-	libusb_free_device_list(devs, 1);
-
-	libusb_exit(NULL);
-	*/
-	
-	//printf("[TRACE> File: \"%s\", Line Number: %d]\n", __FILE__, __LINE__);
 
 	return 0;
 }

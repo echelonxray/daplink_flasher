@@ -15,29 +15,27 @@ signed int dap_info(DAP_Connection* dap_con, unsigned int id) {
 
 	retval = link_send_data(dap_con, data, 2);
 	if (retval < 0) {
-		//printf("Error: dap_info(): link_send_data() failed.\n");
-		return -1;
+		RELAY_RETURN(retval);
 	}
 
 	retval = link_receive_data(dap_con, data, LINK_BUFFER_LENGTH);
 	if (retval < 0) {
-		//printf("Error: dap_info(): link_receive_data() failed.\n");
-		return -2;
+		RELAY_RETURN(retval);
 	}
 
 	if (data[0] != DAP_INFO) {
-		//printf("Error: dap_info(): Erroneous return data/structure.\n");
-		return -3;
+		PRINT_ERR("Erroneous return data/structure: 0x%02X.", (unsigned int)data[0]);
+		return ERROR_DEV_CMD_ERRONEOUS;
 	}
 
 	if (data[1] == 0) {
-		//printf("Error: dap_info(): No data returned.\n");
-		return -4;
+		PRINT_ERR("No data returned.");
+		return ERROR_DEV_CMD_ERRONEOUS;
 	}
 
 	// TODO
 
-	return 0;
+	return SUCCESS_STATUS;
 }
 signed int dap_connect(DAP_Connection* dap_con, unsigned int mode) {
 	unsigned char data[LINK_BUFFER_LENGTH];
@@ -49,32 +47,30 @@ signed int dap_connect(DAP_Connection* dap_con, unsigned int mode) {
 
 	retval = link_send_data(dap_con, data, 2);
 	if (retval < 0) {
-		//printf("Error: dap_connect(): link_send_data() failed.\n");
-		return -1;
+		RELAY_RETURN(retval);
 	}
 
 	retval = link_receive_data(dap_con, data, LINK_BUFFER_LENGTH);
 	if (retval < 0) {
-		//printf("Error: dap_connect(): link_receive_data() failed.\n");
-		return -2;
+		RELAY_RETURN(retval);
 	}
 
 	if (data[0] != DAP_CONNECT) {
-		//printf("Error: dap_connect(): Erroneous return data/structure.\n");
-		return -3;
+		PRINT_ERR("Erroneous return data/structure: 0x%02X.", (unsigned int)data[0]);
+		return ERROR_DEV_CMD_ERRONEOUS;
 	}
 
 	if (data[1] == 0) {
-		//printf("Error: dap_connect(): Connection initialization failed.\n");
-		return -4;
+		PRINT_ERR("DAP Connection Initialization failed.");
+		return ERROR_DEV_CMD_FAILED;
 	}
 
 	if (data[1] != mode && mode != 0) {
-		//printf("Error: dap_connect(): Returned connection mode (%d) does not match requested mode.\n", data[1]);
-		return -5;
+		PRINT_ERR("Returned connection mode (0x%02X) does not match requested mode.", (unsigned int)data[1]);
+		return ERROR_DEV_CMD_ERRONEOUS;
 	}
 
-	return 0;
+	return SUCCESS_STATUS;
 }
 signed int dap_disconnect(DAP_Connection* dap_con) {
 	unsigned char data[LINK_BUFFER_LENGTH];
@@ -85,26 +81,25 @@ signed int dap_disconnect(DAP_Connection* dap_con) {
 
 	retval = link_send_data(dap_con, data, 1);
 	if (retval < 0) {
-		//printf("Error: dap_disconnect(): link_send_data() failed.\n");
-		return -1;
+		RELAY_RETURN(retval);
 	}
 
 	retval = link_receive_data(dap_con, data, LINK_BUFFER_LENGTH);
 	if (retval < 0) {
-		//printf("Error: dap_disconnect(): link_receive_data() failed.\n");
-		return -2;
+		RELAY_RETURN(retval);
 	}
 
 	if (data[0] != DAP_DISCONNECT) {
-		//printf("Error: dap_disconnect(): Erroneous return data/structure.\n");
-		return -3;
-	}
-	if (data[1] == DAP_STATUS_ERROR) {
-		//printf("Error: dap_disconnect(): Returned failure status.\n");
-		return -4;
+		PRINT_ERR("Erroneous return data/structure: 0x%02X.", (unsigned int)data[0]);
+		return ERROR_DEV_CMD_ERRONEOUS;
 	}
 
-	return 0;
+	if (data[1] == DAP_STATUS_ERROR) {
+		PRINT_ERR("DAP Disconnection failed.");
+		return ERROR_DEV_CMD_FAILED;
+	}
+
+	return SUCCESS_STATUS;
 }
 signed int dap_transfer(DAP_Connection* dap_con, unsigned int dap_index, unsigned int transfer_count, unsigned char* req_buffer, uint32_t* data_buffer) {
 	unsigned char data[LINK_BUFFER_LENGTH];
@@ -121,17 +116,18 @@ signed int dap_transfer(DAP_Connection* dap_con, unsigned int dap_index, unsigne
 	k = 3;
 	for (i = 0; i < transfer_count; i++) {
 		if (j >= LINK_BUFFER_LENGTH) { // Don't overflow the TX buffer
-			//printf("Error: dap_transfer(): TX data buffer overflow. Type A.\n");
-			return -5;
+			PRINT_ERR("TX data buffer overflow.");
+			return ERROR_MALFORMED_INPUT;
 		}
 		unsigned char request;
 		request = req_buffer[i];
 		data[j] = request;
 		j++;
-		if ((request & 0x02) == 0) { // Is TX request?
+		if ((request & 0x02) == 0) { // Request Type?
+			// TX request?
 			if (j > LINK_BUFFER_LENGTH - 4) { // Don't overflow the TX buffer
-				//printf("Error: dap_transfer(): TX data buffer overflow. Type B.\n");
-				return -5;
+				PRINT_ERR("TX data buffer overflow.");
+				return ERROR_MALFORMED_INPUT;
 			}
 			uint32_t tx32;
 			tx32 = data_buffer[i];
@@ -141,9 +137,10 @@ signed int dap_transfer(DAP_Connection* dap_con, unsigned int dap_index, unsigne
 			data[j + 3] = (tx32 >> 24) & 0xFF;
 			j += 4;
 		} else {
+			// RX request
 			if (k > LINK_BUFFER_LENGTH - 4) { // Don't overflow the RX buffer
-				//printf("Error: dap_transfer(): RX data buffer overflow.\n");
-				return -5;
+				PRINT_ERR("RX data buffer overflow.");
+				return ERROR_MALFORMED_INPUT;
 			}
 			k += 4;
 		}
@@ -151,27 +148,25 @@ signed int dap_transfer(DAP_Connection* dap_con, unsigned int dap_index, unsigne
 
 	retval = link_send_data(dap_con, data, j);
 	if (retval < 0) {
-		//printf("Error: dap_transfer(): link_send_data() failed.\n");
-		return -1;
+		RELAY_RETURN(retval);
 	}
 
 	retval = link_receive_data(dap_con, data, LINK_BUFFER_LENGTH);
 	if (retval < 0) {
-		//printf("Error: dap_transfer(): link_receive_data() failed.\n");
-		return -2;
+		RELAY_RETURN(retval);
 	}
 
 	if (data[0] != DAP_TRANSFER) {
-		//printf("Error: dap_transfer(): Erroneous return data/structure.\n");
-		return -3;
+		PRINT_ERR("Erroneous return data/structure: 0x%02X.", (unsigned int)data[0]);
+		return ERROR_DEV_CMD_ERRONEOUS;
 	}
 	if (data[1] != transfer_count) {
-		//printf("Error: dap_transfer(): Returned wrong transfer count: %d, expected: %d.\n", data[1], transfer_count);
-		return -5;
+		PRINT_ERR("Returned wrong transfer count: %u, expected: %u.", (unsigned int)data[1], transfer_count);
+		return ERROR_DEV_CMD_ERRONEOUS;
 	}
 	if (data[2] != 0x01) {
-		//printf("Error: dap_transfer(): Returned failure status: 0x%02X\n", data[2]);
-		return -4;
+		PRINT_ERR("DAP Transfer failed.");
+		return ERROR_DEV_CMD_FAILED;
 	}
 
 	k = 3;
@@ -193,7 +188,7 @@ signed int dap_transfer(DAP_Connection* dap_con, unsigned int dap_index, unsigne
 		}
 	}
 
-	return 0;
+	return SUCCESS_STATUS;
 }
 signed int dap_swj_sequence(DAP_Connection* dap_con, unsigned int bit_count, unsigned char* data_buffer, unsigned int data_buffer_length) {
 	unsigned char data[LINK_BUFFER_LENGTH];
@@ -205,32 +200,30 @@ signed int dap_swj_sequence(DAP_Connection* dap_con, unsigned int bit_count, uns
 	data[1] = bit_count;
 	for (i = 0; i < data_buffer_length; i++) {
 		if (i > (LINK_BUFFER_LENGTH - (2 + 1))) { // Don't overflow the buffer [ (LINK_BUFFER_LENGTH - (PREAMBLE_LENGTH + CONVERT_TO_INDEX)) == MAX_BUFFER_INDEX ]
-			//printf("Error: dap_swj_sequence(): TX data buffer overflow.\n");
-			return -5;
+			PRINT_ERR("TX data buffer overflow.");
+			return ERROR_MALFORMED_INPUT;
 		}
 		data[2 + i] = data_buffer[i];
 	}
 
 	retval = link_send_data(dap_con, data, 2 + i);
 	if (retval < 0) {
-		//printf("Error: dap_swj_sequence(): link_send_data() failed.\n");
-		return -1;
+		RELAY_RETURN(retval);
 	}
 
 	retval = link_receive_data(dap_con, data, LINK_BUFFER_LENGTH);
 	if (retval < 0) {
-		//printf("Error: dap_swj_sequence(): link_receive_data() failed.\n");
-		return -2;
+		RELAY_RETURN(retval);
 	}
 
 	if (data[0] != DAP_SWJ_SEQUENCE) {
-		//printf("Error: dap_swj_sequence(): Erroneous return data/structure.\n");
-		return -3;
+		PRINT_ERR("Erroneous return data/structure: 0x%02X.", (unsigned int)data[0]);
+		return ERROR_DEV_CMD_ERRONEOUS;
 	}
 	if (data[1] == DAP_STATUS_ERROR) {
-		//printf("Error: dap_swj_sequence(): Returned failure status.\n");
-		return -4;
+		PRINT_ERR("DAP SWJ Sequence failed.");
+		return ERROR_DEV_CMD_FAILED;
 	}
 
-	return 0;
+	return SUCCESS_STATUS;
 }

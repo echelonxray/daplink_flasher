@@ -3,7 +3,6 @@
 #include "errors.h"
 #include <stdio.h>
 #include <string.h>
-#include <assert.h>
 
 signed int chip_erase_flash_page(DAP_Connection* dap_con, uint32_t address) {
     ChipsEraseFlashPage_PFN chips_erase_flash_page;

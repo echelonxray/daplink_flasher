@@ -59,7 +59,7 @@ signed int link_send_data(DAP_Connection* dap_con, unsigned char* data, unsigned
 	                                   &len,     // Amount transferred
 	                                   10000);   // Timeout ms (10 sec)
 	if (retval != 0) {
-		return -1;
+		return ERROR_LIBUSB_TXDEV;
 	}
 
 	return len;
@@ -77,7 +77,7 @@ signed int link_receive_data(DAP_Connection* dap_con, unsigned char* data, unsig
 	                                   &len,     // Amount transferred
 	                                   10000);   // Timeout ms (10 sec)
 	if (retval != 0) {
-		return -1;
+		return ERROR_LIBUSB_RXDEV;
 	}
 
 	//printf("RX\n");
