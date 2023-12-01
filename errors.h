@@ -1,3 +1,8 @@
+// SPDX-License-Identifier: 0BSD
+/*
+ * Copyright (C) 2023 Michael T. Kloos <michael@michaelkloos.com>
+ */
+
 #ifndef _HEADERINC_ERROR_H
 #define _HEADERINC_ERROR_H
 
