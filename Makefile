@@ -1,3 +1,4 @@
+CROSS_COMPILE :=
 CC            := gcc
 OBJCPY        := objcopy
 STRIP         := strip
@@ -8,9 +9,6 @@ CFLAGS        := $(CFLAGS) -std=c99 # The standards to build to.
 CFLAGS        := $(CFLAGS) -fno-stack-check -fno-stack-protector -fomit-frame-pointer -ffunction-sections -flto
 CFLAGS        := $(CFLAGS) -O3 -MMD
 TARGET        := daptool
-
-DEFINES       :=
-TAG           :=
 
 GFILES        :=
 GFILES        := $(GFILES) main.o
@@ -47,16 +45,16 @@ install: $(TARGET).dynamic.strip
 	cp $(TARGET).dynamic.strip /usr/local/bin/$(TARGET)
 
 %.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CROSS_COMPILE)$(CC) $(CFLAGS) -c $< -o $@
 
 $(TARGET).dynamic: $(GFILES)
-	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+	$(CROSS_COMPILE)$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 
 $(TARGET).static: $(GFILES)
-	$(CC) $(CFLAGS) -static $^ -o $@ $(LDFLAGS)
+	$(CROSS_COMPILE)$(CC) $(CFLAGS) -static $^ -o $@ $(LDFLAGS)
 
 %.strip: %
-	$(STRIP) -s -x -R .comment $^ -o $@
+	$(CROSS_COMPILE)$(STRIP) -s -x -R .comment $^ -o $@
 
 # Header dependency tracking
 -include $(addsuffix .d,$(FILES_BASE))

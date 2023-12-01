@@ -581,7 +581,7 @@ signed int oper_init(DAP_Connection* dap_con) {
 		//dprintf(STDOUT, "SWJ Sequence.\n");
 	}
 
-	// Invalidate this to force an update on the next AP port operation
+	// Invalidate this to force an update on the next AP port operation.
 	// Not necessarily needed because we make the call to update OPER_REG_DEBUG_SELECT below and
 	// before any AP operations.
 	dap_con->sel_addr = 0xFFFFFFFF;
