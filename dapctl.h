@@ -15,12 +15,12 @@ typedef struct {
 
 typedef struct {
 	void* device_handle;
+	ChipsPFNs chip_pfns;
+	unsigned int sel_addr;
 	const char* usbvid_str;
 	const char* usbpid_str;
 	uint16_t usbvid;
 	uint16_t usbpid;
-	unsigned int sel_addr;
-	ChipsPFNs chip_pfns;
 } DAP_Connection;
 
 #include "dapctl/dap_link.h"
