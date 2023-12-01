@@ -1,5 +1,6 @@
 #include "../main.h"
 #include "dap_cmds.h"
+#include "../errors.h"
 #include <stdio.h>
 //#include <string.h>
 

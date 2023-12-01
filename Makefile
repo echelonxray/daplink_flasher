@@ -3,7 +3,7 @@ OBJCPY        := objcopy
 STRIP         := strip
 LDFLAGS       := -lusb-1.0
 CFLAGS        :=
-CFLAGS        := $(CFLAGS) -Wall -Wextra -Wno-unused-parameter -Wunused-result -g # Set build warnings and debugging
+CFLAGS        := $(CFLAGS) -Wall -Wextra -Wno-unused-parameter -g # Set build warnings and debugging
 CFLAGS        := $(CFLAGS) -std=c99 # The standards to build to.
 CFLAGS        := $(CFLAGS) -fno-stack-check -fno-stack-protector -fomit-frame-pointer -ffunction-sections -flto
 CFLAGS        := $(CFLAGS) -O3 -MMD

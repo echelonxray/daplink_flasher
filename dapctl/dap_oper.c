@@ -1,8 +1,12 @@
 #include "../main.h"
 #include "dap_oper.h"
+#include "../errors.h"
 #include "../chips.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
+//#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 
 signed int oper_write_reg(DAP_Connection* dap_con, unsigned int reg, uint32_t value) {
 	unsigned int tr_req;
@@ -18,7 +22,7 @@ signed int oper_write_reg(DAP_Connection* dap_con, unsigned int reg, uint32_t va
 			signed int retval;
 			retval = oper_write_reg(dap_con, OPER_REG_DEBUG_SELECT, reg & 0xF0);
 			if (retval) {
-				RELAY_RETURN(oper_write_reg);
+				RELAY_RETURN(retval);
 			}
 		}
 
@@ -66,7 +70,7 @@ signed int oper_read_reg(DAP_Connection* dap_con, unsigned int reg, uint32_t* bu
 			signed int retval;
 			retval = oper_write_reg(dap_con, OPER_REG_DEBUG_SELECT, reg & 0xF0);
 			if (retval) {
-				RELAY_RETURN(oper_write_reg);
+				RELAY_RETURN(retval);
 			}
 		}
 
@@ -627,9 +631,6 @@ signed int oper_init(DAP_Connection* dap_con) {
 	return SUCCESS_STATUS;
 }
 signed int oper_destroy(DAP_Connection* dap_con) {
-	// Reset and release from halt
-	chip_reset(dap_con, 0);
-
 	// Disconnect
 	{
 		signed int retval;

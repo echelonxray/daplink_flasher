@@ -1,5 +1,6 @@
 #include "../main.h"
 #include "../dapctl.h"
+#include "../errors.h"
 #include "../chips.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -70,56 +71,77 @@ static signed int erase_flash_page(DAP_Connection* dap_con, uint32_t address) {
 
 	address &= ~(page_size - 1); // Technically not needed.  Align address to page.
 
-	// TODO: Handle Return
-	oper_write_mem32(dap_con, controller_address + FLCn_INTR, 0x00000000); // Disable interrupts and clear status flags.
+	signed int retval;
+	retval = oper_write_mem32(dap_con, controller_address + FLCn_INTR, 0x00000000); // Disable interrupts and clear status flags.
+	if (retval) {
+		RELAY_RETURN(retval);
+	}
 
 	// Wait for FLCn_CTRL.pend == 0
 	{
 		uint32_t tmp0;
 		do {
-			// TODO: Handle Return
-			oper_read_mem32(dap_con, controller_address + FLCn_CTRL, &tmp0);
+			retval = oper_read_mem32(dap_con, controller_address + FLCn_CTRL, &tmp0);
+			if (retval) {
+				RELAY_RETURN(retval);
+			}
 		} while (tmp0 & 0x01000000);
 	}
 
-	// TODO: Handle Returns
-	oper_write_mem32(dap_con, controller_address + FLCn_CLKDIV, 0x0000003C); // Reset Clock Divisor.  (Expects 60Mhz SYS_CLK)
-	oper_write_mem32(dap_con, controller_address + FLCn_ADDR,   address);    // Set which page to erase.
-	oper_write_mem32(dap_con, controller_address + FLCn_CTRL,   0x20005500); // Unlock flash.  Set erase mode: page.
-	oper_write_mem32(dap_con, controller_address + FLCn_CTRL,   0x20005504); // Start erase operation.
+	retval = oper_write_mem32(dap_con, controller_address + FLCn_CLKDIV, 0x0000003C); // Reset Clock Divisor.  (Expects 60Mhz SYS_CLK)
+	if (retval) {
+		RELAY_RETURN(retval);
+	}
+	retval = oper_write_mem32(dap_con, controller_address + FLCn_ADDR,   address);    // Set which page to erase.
+	if (retval) {
+		RELAY_RETURN(retval);
+	}
+	retval = oper_write_mem32(dap_con, controller_address + FLCn_CTRL,   0x20005500); // Unlock flash.  Set erase mode: page.
+	if (retval) {
+		RELAY_RETURN(retval);
+	}
+	retval = oper_write_mem32(dap_con, controller_address + FLCn_CTRL,   0x20005504); // Start erase operation.
+	if (retval) {
+		RELAY_RETURN(retval);
+	}
 
 	// Wait for FLCn_CTRL.pend == 0 && FLCn_CTRL.pge == 0
 	{
 		uint32_t tmp0;
 		do {
-			// TODO: Handle Return
-			oper_read_mem32(dap_con, controller_address + FLCn_CTRL, &tmp0);
-			//dprintf(STDOUT, "Probing Flash Erase Op State: 0x%08X\n", tmp0);
+			retval = oper_read_mem32(dap_con, controller_address + FLCn_CTRL, &tmp0);
+			if (retval) {
+				RELAY_RETURN(retval);
+			}
 		} while (tmp0 & 0x01000004);
 	}
 	// Erase operation should now be complete
 
-	// TODO: Handle Return
-	oper_write_mem32(dap_con, controller_address + FLCn_CTRL, 0x00000000); // Lock flash.
+	retval = oper_write_mem32(dap_con, controller_address + FLCn_CTRL, 0x00000000); // Lock flash.
+	if (retval) {
+		RELAY_RETURN(retval);
+	}
 
 	// Check exit status
 	{
 		uint32_t tmp0;
-		// TODO: Handle Return
-		oper_read_mem32(dap_con, controller_address + FLCn_INTR, &tmp0);
+		retval = oper_read_mem32(dap_con, controller_address + FLCn_INTR, &tmp0);
+		if (retval) {
+			RELAY_RETURN(retval);
+		}
 		if (tmp0 & 0x00000002) { // Flash access fault?
-			//dprintf(STDOUT, "Error: oper_erase_flash_page(): Flash Access Fault: 0x%08X, Page Size: 0x%08X.\n", address, page_size);
-			return -1;
+			PRINT_ERR("Flash Controller reported an Access Fault during the Erase Operation at address 0x%08X", address);
+			return ERROR_DEV_CMD_FAILED;
 		}
 		if (tmp0 & 0x00000001) { // Flash operation complete?
 			//dprintf(STDOUT, "Erase Flash Operation Complete.  Page Address: 0x%08X.\n", address);
-			return 0;
+			return SUCCESS_STATUS;
 		}
 	}
 
 	// Should not be reachable.
-	//dprintf(STDOUT, "Error: oper_erase_flash_page(): Code pathway should not be reachable: 0x%08X, Page Size: 0x%08X.\n", address, page_size);
-	return -5;
+	PRINT_ERR("Reached what should be unreachable code");
+	return ERROR_UNSPECIFIED;
 }
 static signed int _write_to_flash_page(DAP_Connection* dap_con, uint32_t address, uint32_t data_0, uint32_t data_1, uint32_t data_2, uint32_t data_3) {
 	uint32_t controller_address;
@@ -139,60 +161,97 @@ static signed int _write_to_flash_page(DAP_Connection* dap_con, uint32_t address
 	//	return -5;
 	//}
 
-	// TODO: Handle Return
-	oper_write_mem32(dap_con, controller_address + FLCn_INTR, 0x00000000); // Disable interrupts and clear status flags.
+	signed int retval;
+	retval = oper_write_mem32(dap_con, controller_address + FLCn_INTR, 0x00000000); // Disable interrupts and clear status flags.
+	if (retval) {
+		RELAY_RETURN(retval);
+	}
 
 	// Wait for FLCn_CTRL.pend == 0
 	{
 		uint32_t tmp0;
 		do {
 			// TODO: Handle Return
-			oper_read_mem32(dap_con, controller_address + FLCn_CTRL, &tmp0);
+			retval = oper_read_mem32(dap_con, controller_address + FLCn_CTRL, &tmp0);
+			if (retval) {
+				RELAY_RETURN(retval);
+			}
 		} while (tmp0 & 0x01000000);
 	}
 
 	// TODO: Handle Returns
-	oper_write_mem32(dap_con, controller_address + FLCn_CLKDIV, 0x0000003C); // Reset Clock Divisor.  (Expects 60Mhz SYS_CLK)
-	oper_write_mem32(dap_con, controller_address + FLCn_ADDR,   address);    // Set the address to write to.
-	oper_write_mem32(dap_con, controller_address + FLCn_DATA_0, data_0);     // Set part 1/4 of the data to write.
-	oper_write_mem32(dap_con, controller_address + FLCn_DATA_1, data_1);     // Set part 2/4 of the data to write.
-	oper_write_mem32(dap_con, controller_address + FLCn_DATA_2, data_2);     // Set part 3/4 of the data to write.
-	oper_write_mem32(dap_con, controller_address + FLCn_DATA_3, data_3);     // Set part 4/4 of the data to write.
-	oper_write_mem32(dap_con, controller_address + FLCn_CTRL,   0x20000000); // Unlock flash.
-	oper_write_mem32(dap_con, controller_address + FLCn_CTRL,   0x20000001); // Start write operation.
+	retval = oper_write_mem32(dap_con, controller_address + FLCn_CLKDIV, 0x0000003C); // Reset Clock Divisor.  (Expects 60Mhz SYS_CLK)
+	if (retval) {
+		RELAY_RETURN(retval);
+	}
+	retval = oper_write_mem32(dap_con, controller_address + FLCn_ADDR,   address);    // Set the address to write to.
+	if (retval) {
+		RELAY_RETURN(retval);
+	}
+	retval = oper_write_mem32(dap_con, controller_address + FLCn_DATA_0, data_0);     // Set part 1/4 of the data to write.
+	if (retval) {
+		RELAY_RETURN(retval);
+	}
+	retval = oper_write_mem32(dap_con, controller_address + FLCn_DATA_1, data_1);     // Set part 2/4 of the data to write.
+	if (retval) {
+		RELAY_RETURN(retval);
+	}
+	retval = oper_write_mem32(dap_con, controller_address + FLCn_DATA_2, data_2);     // Set part 3/4 of the data to write.
+	if (retval) {
+		RELAY_RETURN(retval);
+	}
+	retval = oper_write_mem32(dap_con, controller_address + FLCn_DATA_3, data_3);     // Set part 4/4 of the data to write.
+	if (retval) {
+		RELAY_RETURN(retval);
+	}
+	retval = oper_write_mem32(dap_con, controller_address + FLCn_CTRL,   0x20000000); // Unlock flash.
+	if (retval) {
+		RELAY_RETURN(retval);
+	}
+	retval = oper_write_mem32(dap_con, controller_address + FLCn_CTRL,   0x20000001); // Start write operation.
+	if (retval) {
+		RELAY_RETURN(retval);
+	}
 
 	// Wait for FLCn_CTRL.pend == 0 && FLCn_CTRL.wr == 0
 	{
 		uint32_t tmp0;
 		do {
 			// TODO: Handle Return
-			oper_read_mem32(dap_con, controller_address + FLCn_CTRL, &tmp0);
-			//dprintf(STDOUT, "Probing Flash Write Op State: 0x%08X\n", tmp0);
+			retval = oper_read_mem32(dap_con, controller_address + FLCn_CTRL, &tmp0);
+			if (retval) {
+				RELAY_RETURN(retval);
+			}
 		} while (tmp0 & 0x01000001);
 	}
 	// Write operation should now be complete
 
-	// TODO: Handle Return
-	oper_write_mem32(dap_con, controller_address + FLCn_CTRL, 0x00000000); // Lock flash.
+	retval = oper_write_mem32(dap_con, controller_address + FLCn_CTRL, 0x00000000); // Lock flash.
+	if (retval) {
+		RELAY_RETURN(retval);
+	}
 
 	// Check exit status
 	{
 		uint32_t tmp0;
 		// TODO: Handle Return
-		oper_read_mem32(dap_con, controller_address + FLCn_INTR, &tmp0);
+		retval = oper_read_mem32(dap_con, controller_address + FLCn_INTR, &tmp0);
+		if (retval) {
+			RELAY_RETURN(retval);
+		}
 		if (tmp0 & 0x00000002) { // Flash access fault?
-			//dprintf(STDOUT, "Error: oper_write_flash_page(): Flash Access Fault: 0x%08X.\n", address);
-			return -1;
+			PRINT_ERR("Flash Controller reported an Access Fault during the Write Operation at address 0x%08X", address);
+			return ERROR_DEV_CMD_FAILED;
 		}
 		if (tmp0 & 0x00000001) { // Flash operation complete?
 			//dprintf(STDOUT, "Write Flash Operation Complete\n");
-			return 0;
+			return SUCCESS_STATUS;
 		}
 	}
 
 	// Should not be reachable.
-	//dprintf(STDOUT, "Error: oper_write_flash_page(): Code pathway should not be reachable: 0x%08X.\n", address);
-	return -5;
+	PRINT_ERR("Reached what should be unreachable code");
+	return ERROR_UNSPECIFIED;
 }
 static signed int _write_to_flash_page_partial(DAP_Connection* dap_con, uint32_t address, unsigned char* data, size_t data_len, int do_preserve) {
 	uint32_t aligned_address;
@@ -204,7 +263,11 @@ static signed int _write_to_flash_page_partial(DAP_Connection* dap_con, uint32_t
 	uint32_t buffer[4];
 	if (do_preserve) {
 		// TODO: Handle Return
-		oper_read_memblock32(dap_con, aligned_address, buffer, 4);
+		signed int retval;
+		retval = oper_read_memblock32(dap_con, aligned_address, buffer, 4);
+		if (retval) {
+			RELAY_RETURN(retval);
+		}
 	} else {
 		memset(buffer, 0xFF, sizeof(buffer));
 	}
@@ -216,8 +279,11 @@ static signed int _write_to_flash_page_partial(DAP_Connection* dap_con, uint32_t
 		buffer_ptr++;
 	}
 
-	// TODO: Handle Return
-	_write_to_flash_page(dap_con, aligned_address, buffer[0], buffer[1], buffer[2], buffer[3]);
+	signed int retval;
+	retval = _write_to_flash_page(dap_con, aligned_address, buffer[0], buffer[1], buffer[2], buffer[3]);
+	if (retval) {
+		RELAY_RETURN(retval);
+	}
 
 	return SUCCESS_STATUS;
 }
@@ -227,8 +293,8 @@ static signed int write_to_flash_page(DAP_Connection* dap_con, uint32_t address,
 	// These cases are checked in the wrapper function.
 
 	if (address < 0x10000000 && address > 0x1033FFFF) {
-		// TODO
-		return -1;
+		PRINT_ERR("Attempted to write to flash memory page at invalid address: 0x%08X.", address);
+		return ERROR_MALFORMED_INPUT;
 	}
 
 	uint32_t start_aligned_address;
@@ -240,8 +306,11 @@ static signed int write_to_flash_page(DAP_Connection* dap_con, uint32_t address,
 	end_aligned_address &= ~(0x10 - 1);
 
 	if (start_aligned_address == end_aligned_address) {
-		// TODO: Handle Return
-		_write_to_flash_page_partial(dap_con, address, data, data_len, do_preserve);
+		signed int retval;
+		retval = _write_to_flash_page_partial(dap_con, address, data, data_len, do_preserve);
+		if (retval) {
+			RELAY_RETURN(retval);
+		}
 		return SUCCESS_STATUS;
 	}
 
@@ -251,8 +320,11 @@ static signed int write_to_flash_page(DAP_Connection* dap_con, uint32_t address,
 	if (current_aligned_address != address) {
 		uint32_t part_length;
 		part_length = 0x10 - (address - current_aligned_address);
-		// TODO: Handle Return
-		_write_to_flash_page_partial(dap_con, address, data, part_length, do_preserve);
+		signed int retval;
+		retval = _write_to_flash_page_partial(dap_con, address, data, part_length, do_preserve);
+		if (retval) {
+			RELAY_RETURN(retval);
+		}
 		data += part_length;
 		current_aligned_address += 0x10;
 	}
@@ -276,8 +348,11 @@ static signed int write_to_flash_page(DAP_Connection* dap_con, uint32_t address,
 		)
 		*/
 
-		// TODO: Handle Return
-		_write_to_flash_page(dap_con, current_aligned_address, buffer[0], buffer[1], buffer[2], buffer[3]);
+		signed int retval;
+		retval = _write_to_flash_page(dap_con, current_aligned_address, buffer[0], buffer[1], buffer[2], buffer[3]);
+		if (retval) {
+			RELAY_RETURN(retval);
+		}
 		/*
 		uint32_t buffer[4];
 
@@ -310,8 +385,11 @@ static signed int write_to_flash_page(DAP_Connection* dap_con, uint32_t address,
 	uint32_t end_address = address + data_len;
 	uint32_t remaining_bytes = end_address - current_aligned_address;
 	if (current_aligned_address != end_address) {
-		// TODO: Handle Return
-		_write_to_flash_page_partial(dap_con, current_aligned_address, data, remaining_bytes, do_preserve);
+		signed int retval;
+		retval = _write_to_flash_page_partial(dap_con, current_aligned_address, data, remaining_bytes, do_preserve);
+		if (retval) {
+			RELAY_RETURN(retval);
+		}
 	}
 
 	return SUCCESS_STATUS;
@@ -335,23 +413,29 @@ static signed int _write_to_flash_partial(DAP_Connection* dap_con, uint32_t addr
 	
 	unsigned char* buffer = malloc(page_size);
 	if (buffer == NULL) {
-		// TODO: Handle Error
-		dprintf(STDERR, "Error: malloc()\n");
-		exit(1);
+		PRINT_ERR(ERRSTR_MEMALLOC);
+		return ERROR_MEMALLOC;
 	}
 	
-	// TODO: Handle Return Value
-	oper_read_memblock08(dap_con, page_aligned_address, buffer, page_size);
+	signed int retval;
+	retval = oper_read_memblock08(dap_con, page_aligned_address, buffer, page_size);
+	if (retval) {
+		RELAY_RETURN(retval);
+	}
 	
 	uint32_t offset_within_page = address - page_aligned_address;
 	for (uint32_t i = 0; i < data_len; i++) {
 		buffer[i + offset_within_page] = data[i];
 	}
 	
-	// TODO: Handle Return Value
-	erase_flash_page(dap_con, page_aligned_address);
-	// TODO: Handle Return Value
-	write_to_flash_page(dap_con, page_aligned_address, buffer, page_size, 1);
+	retval = erase_flash_page(dap_con, page_aligned_address);
+	if (retval) {
+		RELAY_RETURN(retval);
+	}
+	retval = write_to_flash_page(dap_con, page_aligned_address, buffer, page_size, 1);
+	if (retval) {
+		RELAY_RETURN(retval);
+	}
 	
 	free(buffer);
 	
@@ -363,8 +447,8 @@ static signed int write_to_flash(DAP_Connection* dap_con, uint32_t address, unsi
 	// These cases are checked in the wrapper function.
 
 	if (address < 0x10000000 && address > 0x1033FFFF) {
-		// TODO
-		return -1;
+		PRINT_ERR("Attempted to write to flash memory at invalid address: 0x%08X.", address);
+		return ERROR_MALFORMED_INPUT;
 	}
 
 	uint32_t start_aligned_address;
@@ -377,13 +461,21 @@ static signed int write_to_flash(DAP_Connection* dap_con, uint32_t address, unsi
 
 	if (start_aligned_address == end_aligned_address) {
 		if (do_preserve) {
-			// TODO: Handle Return
-			_write_to_flash_partial(dap_con, address, data, data_len);
+			signed int retval;
+			retval = _write_to_flash_partial(dap_con, address, data, data_len);
+			if (retval) {
+				RELAY_RETURN(retval);
+			}
 		} else {
-			// TODO: Handle Return
-			erase_flash_page(dap_con, start_aligned_address);
-			// TODO: Handle Return
-			write_to_flash_page(dap_con, address, data, data_len, do_preserve);
+			signed int retval;
+			retval = erase_flash_page(dap_con, start_aligned_address);
+			if (retval) {
+				RELAY_RETURN(retval);
+			}
+			retval = write_to_flash_page(dap_con, address, data, data_len, do_preserve);
+			if (retval) {
+				RELAY_RETURN(retval);
+			}
 		}
 		return SUCCESS_STATUS;
 	}
@@ -395,21 +487,32 @@ static signed int write_to_flash(DAP_Connection* dap_con, uint32_t address, unsi
 		uint32_t part_length;
 		part_length = _get_page_size(current_aligned_address) - (address - current_aligned_address);
 		if (do_preserve) {
-			// TODO: Handle Return
-			_write_to_flash_partial(dap_con, address, data, part_length);
+			signed int retval;
+			retval = _write_to_flash_partial(dap_con, address, data, part_length);
+			if (retval) {
+				RELAY_RETURN(retval);
+			}
 		} else {
-			// TODO: Handle Return
-			erase_flash_page(dap_con, current_aligned_address);
-			// TODO: Handle Return
-			write_to_flash_page(dap_con, address, data, part_length, do_preserve);
+			signed int retval;
+			retval = erase_flash_page(dap_con, current_aligned_address);
+			if (retval) {
+				RELAY_RETURN(retval);
+			}
+			retval = write_to_flash_page(dap_con, address, data, part_length, do_preserve);
+			if (retval) {
+				RELAY_RETURN(retval);
+			}
 		}
 		data += part_length;
 		current_aligned_address += 0x10;
 	}
 
 	while (current_aligned_address != end_aligned_address) {
-		// TODO: Handle Return Value
-		erase_flash_page(dap_con, current_aligned_address);
+		signed int retval;
+		retval = erase_flash_page(dap_con, current_aligned_address);
+		if (retval) {
+			RELAY_RETURN(retval);
+		}
 		uint32_t page_size = _get_page_size(current_aligned_address);
 		for (uint32_t i = 0; i < page_size; i += 0x10) {
 			uint32_t buffer[4];
@@ -419,8 +522,10 @@ static signed int write_to_flash(DAP_Connection* dap_con, uint32_t address, unsi
 				data++;
 				buffer_ptr++;
 			}
-			// TODO: Handle Return
-			_write_to_flash_page(dap_con, current_aligned_address + i, buffer[0], buffer[1], buffer[2], buffer[3]);
+			retval = _write_to_flash_page(dap_con, current_aligned_address + i, buffer[0], buffer[1], buffer[2], buffer[3]);
+			if (retval) {
+				RELAY_RETURN(retval);
+			}
 		}
 		current_aligned_address += page_size;
 	}
@@ -429,146 +534,110 @@ static signed int write_to_flash(DAP_Connection* dap_con, uint32_t address, unsi
 	uint32_t remaining_bytes = end_address - current_aligned_address;
 	if (current_aligned_address != end_address) {
 		if (do_preserve) {
-			// TODO: Handle Return
-			_write_to_flash_partial(dap_con, current_aligned_address, data, remaining_bytes);
-		} else {
-			// TODO: Handle Return
-			erase_flash_page(dap_con, current_aligned_address);
-			// TODO: Handle Return
-			write_to_flash_page(dap_con, current_aligned_address, data, remaining_bytes, do_preserve);
-		}
-	}
-
-	return SUCCESS_STATUS;
-}
-
-/*
-static signed int oper_program_flash(DAP_Connection* dap_con, uint32_t address, uint8_t* buffer, uint32_t buffer_length) {
-	if (buffer_length == 0) {
-		return SUCCESS_STATUS;
-	}
-	if (address < 0x10000000 && address > 0x1033FFFF) {
-		return -1;
-	}
-
-	// Erase Flash
-	uint32_t* start_page_backup = malloc(0x4000);
-	if (start_page_backup == NULL) {
-		// TODO: Handle malloc() failure
-	}
-	uint32_t* end_page_backup = malloc(0x4000);
-	if (end_page_backup == NULL) {
-		// TODO: Handle malloc() failure
-	}
-	for (uint32_t i = 0; i < buffer_length; i++) {
-		uint32_t page_size;
-		if        (tmp_address >= 0x10000000 && tmp_address <= 0x102FFFFF) {
-			page_size = 0x4000;
-		} else if (tmp_address >= 0x10300000 && tmp_address <= 0x1033FFFF) {
-			page_size = 0x2000;
-		}
-		uint32_t address_offset;
-		uint32_t aligned_address;
-		uint32_t next_i;
-		address_offset = address & (page_size - 1);
-		aligned_address = address & ~(page_size - 1);
-		next_i = i + page_size;
-		if (i == 0 && tmp_address != address) {
-			oper_read_memblock32(dap_con, tmp_address, start_page_backup, page_size / sizeof(uint32_t));
-		} else if (next_i >= buffer_length && (address + buffer_length) & (page_size - 1)) {
-			oper_read_memblock32(dap_con, tmp_address, end_page_backup, page_size / sizeof(uint32_t));
-		}
-		erase_flash_page(dap_con, tmp_address);
-		if (i == 0 && tmp_address != address) {
-			uint32_t copy_length;
-			copy_length = page_size - address_offset;
-			if (buffer_index + copy_length > buffer_length) {
-				copy_length = buffer_length - buffer_index;
+			signed int retval;
+			retval = _write_to_flash_partial(dap_con, current_aligned_address, data, remaining_bytes);
+			if (retval) {
+				RELAY_RETURN(retval);
 			}
-			memcpy(start_page_backup + address_offset, buffer, copy_length);
-			buffer += page_size - address_offset;
-			write_to_flash_page(dap_con, tmp_address, start_page_backup, page_size);
-		} else if (next_i >= buffer_length && (address + buffer_length) & (page_size - 1)) {
-			memcpy(start_page_backup + address_offset, buffer, page_size - address_offset);
-			write_to_flash_page(dap_con, tmp_address, end_page_backup, page_size);
+		} else {
+			signed int retval;
+			retval = erase_flash_page(dap_con, current_aligned_address);
+			if (retval) {
+				RELAY_RETURN(retval);
+			}
+			retval = write_to_flash_page(dap_con, current_aligned_address, data, remaining_bytes, do_preserve);
+			if (retval) {
+				RELAY_RETURN(retval);
+			}
 		}
-		tmp_address += page_size;
-		i = next_i;
 	}
-
-	// Write Flash
-	if        (address >= 0x10000000 && address <= 0x102FFFFF) {
-		tmp_address = address & ~(0x4000 - 1);
-	} else if (address >= 0x10300000 && address <= 0x1033FFFF) {
-		tmp_address = address & ~(0x2000 - 1);
-	}
-	if (tmp_address != address) {
-	}
-	for (uint32_t i = 0; i < buffer_length; i++) {
-	}
-	write_to_flash_page(dap_con, address, buffer, buffer_length);
-	free(start_page_backup);
-	free(end_page_backup);
 
 	return SUCCESS_STATUS;
 }
-*/
 
 static signed int reset(DAP_Connection* dap_con, int halt) {
-	// TODO: Handle Return Values
 	if (halt) {
-		oper_write_mem32(dap_con, 0xE000EDF0, 0xA05F0003);
+		signed int retval;
+		retval = oper_write_mem32(dap_con, 0xE000EDF0, 0xA05F0003);
+		if (retval) {
+			RELAY_RETURN(retval);
+		}
 		uint32_t debugreg_demcr;
-		oper_read_mem32(dap_con,  0xE000EDFC, &debugreg_demcr);
-		oper_write_mem32(dap_con, 0xE000EDFC, debugreg_demcr | 0x1);
+		retval = oper_read_mem32(dap_con,  0xE000EDFC, &debugreg_demcr);
+		if (retval) {
+			RELAY_RETURN(retval);
+		}
+		retval = oper_write_mem32(dap_con, 0xE000EDFC, debugreg_demcr | 0x1);
+		if (retval) {
+			RELAY_RETURN(retval);
+		}
 
-		oper_write_mem32(dap_con, 0xE000ED0C, 0x05FA0000 | 0x1); // VECTRESET
+		retval = oper_write_mem32(dap_con, 0xE000ED0C, 0x05FA0000 | 0x1); // VECTRESET
+		if (retval) {
+			RELAY_RETURN(retval);
+		}
 	} else {
-		oper_write_mem32(dap_con, 0xE000ED0C, 0x05FA0000 | 0x4); // SYSRESETREQ
+		signed int retval;
+		retval = oper_write_mem32(dap_con, 0xE000ED0C, 0x05FA0000 | 0x4); // SYSRESETREQ
+		if (retval) {
+			RELAY_RETURN(retval);
+		}
 	}
 
 	return SUCCESS_STATUS;
 }
 
 static signed int conn_init(DAP_Connection* dap_con, libusb_device_handle* d_handle) {
-	// TODO: Handle Return
-	chip_reset(dap_con, 1);
+	signed int retval;
+	retval = chip_reset(dap_con, 1);
+	if (retval) {
+		RELAY_RETURN(retval);
+	}
 
 	// Configure Clock - Set to 60Mhz internal oscillator (ISO)
 	{
 		uint32_t buffer;
-		signed int retval;
 
 		// Get GCR_CLKCTRL value
 		retval = oper_read_mem32(dap_con, GCR_ROOTADDR + GCR_CLKCTRL, &buffer);
-		assert(retval == 0);
+		if (retval) {
+			RELAY_RETURN(retval);
+		}
 
 		// Ensure the 60Mhz oscillator (ISO) is enabled
 		buffer &= 0x3F3F2FC0; // Remove reserved bits.
 		buffer |= 0x00040000; // Set the 60Mhz oscillator (ISO) enable bit.
 		retval = oper_write_mem32(dap_con, GCR_ROOTADDR + GCR_CLKCTRL, buffer);
-		assert(retval == 0);
+		if (retval) {
+			RELAY_RETURN(retval);
+		}
 
 		// Wait for the the 60 MHz oscillator (ISO) to be ready and get new value for GCR_CLKCTRL
 		dprintf(STDOUT, "Wait for the ISO to be ready...");
 		do {
 			retval = oper_read_mem32(dap_con, GCR_ROOTADDR + GCR_CLKCTRL, &buffer);
-			assert(retval == 0);
+			if (retval) {
+				RELAY_RETURN(retval);
+			}
 		} while ((buffer & (1 << 26)) == 0);
 		dprintf(STDOUT, "Done\n");
 
-		// Set the the 60Mhz oscillator to SYS_OSC
+		// Set the SYS_OSC to the 60Mhz oscillator
 		buffer &= 0x3F3F2FC0; // Remove reserved bits.
 		buffer &= 0xFFFFFF3F; // Clear the clock divisor bits, reseting it to 0.
 		buffer &= 0xFFFFF1FF; // Clear the clock source selection bits, reseting it to 0 (ISO).
 		retval = oper_write_mem32(dap_con, GCR_ROOTADDR + GCR_CLKCTRL, buffer);
-		assert(retval == 0);
+		if (retval) {
+			RELAY_RETURN(retval);
+		}
 
 		// Wait for the the system clock to be ready
 		dprintf(STDOUT, "Wait for the SYSCLK to be ready...");
 		do {
 			retval = oper_read_mem32(dap_con, GCR_ROOTADDR + GCR_CLKCTRL, &buffer);
-			assert(retval == 0);
+			if (retval) {
+				RELAY_RETURN(retval);
+			}
 		} while ((buffer & (1 << 13)) == 0);
 		dprintf(STDOUT, "Done\n");
 	}
@@ -576,10 +645,12 @@ static signed int conn_init(DAP_Connection* dap_con, libusb_device_handle* d_han
 	return SUCCESS_STATUS;
 }
 static signed int conn_destroy(DAP_Connection* dap_con) {
-	//dprintf(STDOUT, "TraceA\n");
-	// TODO: Handle Return
-	chip_reset(dap_con, 0);
-	//dprintf(STDOUT, "TraceB\n");
+	signed int retval;
+	retval = chip_reset(dap_con, 0);
+	if (retval) {
+		RELAY_RETURN(retval);
+	}
+
 	return SUCCESS_STATUS;
 }
 

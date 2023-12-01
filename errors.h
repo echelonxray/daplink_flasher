@@ -32,7 +32,7 @@
 
 // Error Macros -----------------------------------
 #define PRINT_ERR(format_str, ...) { dprintf(STDERR, "Error [File: \"%s\", Line: %d]: " format_str "\n", __FILE__, __LINE__ __VA_OPT__(,) __VA_ARGS__); }
-#define RELAY_RETURN(return_code) { dprintf(STDERR, " ... in File: \"%s\", Line: %d"); return return_code; }
+#define RELAY_RETURN(return_code) { dprintf(STDERR, " ... in File: \"%s\", Line: %d", __FILE__, __LINE__); return return_code; }
 // ------------------------------------------------
 
 #endif

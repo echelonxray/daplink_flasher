@@ -1,11 +1,11 @@
 #include "../main.h"
 #include "flash.h"
+#include "../errors.h"
 #include "../chips.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-#include <errno.h>
 #include <limits.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -80,15 +80,24 @@ signed int mode_flash(DAP_Connection* dap_con) {
 		RELAY_RETURN(retval);
 	}
 
+	retval = oper_init(dap_con);
+	if (retval) {
+		free(image_data);
+		link_disconnect(dap_con);
+		RELAY_RETURN(retval);
+	}
+
 	retval = chip_conn_init(dap_con);
 	if (retval) {
 		free(image_data);
+		link_disconnect(dap_con);
 		RELAY_RETURN(retval);
 	}
 
 	retval = chip_write_to_flash(dap_con, load_offset, image_data, image_size, 0);
 	if (retval) {
 		free(image_data);
+		link_disconnect(dap_con);
 		RELAY_RETURN(retval);
 	}
 
@@ -96,6 +105,13 @@ signed int mode_flash(DAP_Connection* dap_con) {
 
 	retval = chip_conn_destroy(dap_con);
 	if (retval) {
+		link_disconnect(dap_con);
+		RELAY_RETURN(retval);
+	}
+
+	retval = oper_destroy(dap_con);
+	if (retval) {
+		link_disconnect(dap_con);
 		RELAY_RETURN(retval);
 	}
 

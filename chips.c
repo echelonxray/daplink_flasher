@@ -11,11 +11,12 @@ signed int chip_erase_flash_page(DAP_Connection* dap_con, uint32_t address) {
 }
 signed int chip_write_to_flash_page(DAP_Connection* dap_con, uint32_t address, unsigned char* data, size_t data_len, int do_preserve) {
     if (data_len == 0) {
-        return 0;
+        return SUCCESS_STATUS;
     }
     if ((address + data_len) < address) {
         // Overflow
-        return -1;
+        PRINT_ERR("Datatype Overflow");
+        return ERROR_UNSPECIFIED;
     }
     ChipsWriteToFlashPage_PFN chips_write_to_flash_page;
     chips_write_to_flash_page = dap_con->chip_pfns.chips_write_to_flash_page;
@@ -23,11 +24,12 @@ signed int chip_write_to_flash_page(DAP_Connection* dap_con, uint32_t address, u
 }
 signed int chip_write_to_flash(DAP_Connection* dap_con, uint32_t address, unsigned char* data, size_t data_len, int do_preserve) {
     if (data_len == 0) {
-        return 0;
+        return SUCCESS_STATUS;
     }
     if ((address + data_len) < address) {
         // Overflow
-        return -1;
+        PRINT_ERR("Datatype Overflow");
+        return ERROR_UNSPECIFIED;
     }
     ChipsWriteToFlash_PFN chips_write_to_flash;
     chips_write_to_flash = dap_con->chip_pfns.chips_write_to_flash;
@@ -41,8 +43,6 @@ signed int chip_reset(DAP_Connection* dap_con, int halt){
 }
 
 signed int chip_conn_init(DAP_Connection* dap_con) {
-    //assert(! chips_find(dap_con, chipname) );
-    assert(! oper_init(dap_con) );
     ChipsConnInit_PFN chips_conn_init;
     chips_conn_init = dap_con->chip_pfns.chips_conn_init;
     return chips_conn_init(dap_con);
@@ -50,10 +50,7 @@ signed int chip_conn_init(DAP_Connection* dap_con) {
 signed int chip_conn_destroy(DAP_Connection* dap_con) {
     ChipsConnDestroy_PFN chips_conn_destroy;
     chips_conn_destroy = dap_con->chip_pfns.chips_conn_destroy;
-    signed int retval;
-    retval = chips_conn_destroy(dap_con);
-    assert(! oper_destroy(dap_con) );
-    return retval;
+    return chips_conn_destroy(dap_con);
 }
 
 typedef void (*ChipsFF)(DAP_Connection* dap_con);
