@@ -43,7 +43,7 @@ clean:
 	rm -f $(addsuffix .o,$(FILES_BASE))
 	rm -f $(addsuffix .d,$(FILES_BASE))
 
-install:
+install: $(TARGET).dynamic.strip
 	cp $(TARGET).dynamic.strip /usr/local/bin/$(TARGET)
 
 %.o: %.c

@@ -171,7 +171,6 @@ static signed int _write_to_flash_page(DAP_Connection* dap_con, uint32_t address
 	{
 		uint32_t tmp0;
 		do {
-			// TODO: Handle Return
 			retval = oper_read_mem32(dap_con, controller_address + FLCn_CTRL, &tmp0);
 			if (retval) {
 				RELAY_RETURN(retval);
@@ -179,7 +178,6 @@ static signed int _write_to_flash_page(DAP_Connection* dap_con, uint32_t address
 		} while (tmp0 & 0x01000000);
 	}
 
-	// TODO: Handle Returns
 	retval = oper_write_mem32(dap_con, controller_address + FLCn_CLKDIV, 0x0000003C); // Reset Clock Divisor.  (Expects 60Mhz SYS_CLK)
 	if (retval) {
 		RELAY_RETURN(retval);
@@ -217,7 +215,6 @@ static signed int _write_to_flash_page(DAP_Connection* dap_con, uint32_t address
 	{
 		uint32_t tmp0;
 		do {
-			// TODO: Handle Return
 			retval = oper_read_mem32(dap_con, controller_address + FLCn_CTRL, &tmp0);
 			if (retval) {
 				RELAY_RETURN(retval);
@@ -234,7 +231,6 @@ static signed int _write_to_flash_page(DAP_Connection* dap_con, uint32_t address
 	// Check exit status
 	{
 		uint32_t tmp0;
-		// TODO: Handle Return
 		retval = oper_read_mem32(dap_con, controller_address + FLCn_INTR, &tmp0);
 		if (retval) {
 			RELAY_RETURN(retval);
@@ -262,7 +258,6 @@ static signed int _write_to_flash_page_partial(DAP_Connection* dap_con, uint32_t
 
 	uint32_t buffer[4];
 	if (do_preserve) {
-		// TODO: Handle Return
 		signed int retval;
 		retval = oper_read_memblock32(dap_con, aligned_address, buffer, 4);
 		if (retval) {
