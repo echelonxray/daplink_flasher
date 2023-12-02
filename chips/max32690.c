@@ -148,7 +148,7 @@ static signed int erase_flash_page(DAP_Connection* dap_con, uint32_t address) {
 	PRINT_ERR("Reached what should be unreachable code");
 	return ERROR_UNSPECIFIED;
 }
-static signed int _write_to_flash_page(DAP_Connection* dap_con, uint32_t address, uint32_t data_0, uint32_t data_1, uint32_t data_2, uint32_t data_3) {
+static signed int _write_to_flash_page(DAP_Connection* dap_con, uint32_t address, uint32_t data_0, uint32_t data_1, uint32_t data_2, uint32_t data_3, unsigned int progress) {
 	uint32_t controller_address;
 	if        (address >= 0x10000000 && address <= 0x102FFFFF) {
 		controller_address = 0x40029000;
@@ -159,7 +159,7 @@ static signed int _write_to_flash_page(DAP_Connection* dap_con, uint32_t address
 		return ERROR_MALFORMED_INPUT;
 	}
 
-	dprintf(STDERR, "[STATUS] Writing 16 bytes at address 0x%08X\n", address);
+	dprintf(STDERR, "\r[STATUS] Writing 16 bytes at address 0x%08X. %u%%", address, progress);
 
 	//if (address & (0x10 - 1)) {
 	//	//dprintf(STDOUT, "Error: oper_write_flash_page(): Address Misaligned: 0x%08X.\n", address);
@@ -254,7 +254,7 @@ static signed int _write_to_flash_page(DAP_Connection* dap_con, uint32_t address
 	PRINT_ERR("Reached what should be unreachable code");
 	return ERROR_UNSPECIFIED;
 }
-static signed int _write_to_flash_page_partial(DAP_Connection* dap_con, uint32_t address, unsigned char* data, size_t data_len, int do_preserve) {
+static signed int _write_to_flash_page_partial(DAP_Connection* dap_con, uint32_t address, unsigned char* data, size_t data_len, int do_preserve, unsigned int progress) {
 	uint32_t aligned_address;
 	uint32_t start_skip_count;
 
@@ -280,7 +280,7 @@ static signed int _write_to_flash_page_partial(DAP_Connection* dap_con, uint32_t
 	}
 
 	signed int retval;
-	retval = _write_to_flash_page(dap_con, aligned_address, buffer[0], buffer[1], buffer[2], buffer[3]);
+	retval = _write_to_flash_page(dap_con, aligned_address, buffer[0], buffer[1], buffer[2], buffer[3], progress);
 	if (retval) {
 		RELAY_RETURN(retval);
 	}
@@ -291,6 +291,8 @@ static signed int write_to_flash_page(DAP_Connection* dap_con, uint32_t address,
 	// Does not need to handle data_len == 0.
 	// Does not need to handle address + data_len type overflow.
 	// These cases are checked in the wrapper function.
+	unsigned int writes_to_do = 0;
+	unsigned int writes_done = 0;
 
 	if (address < 0x10000000 && address > 0x1033FFFF) {
 		PRINT_ERR("Attempted to write to flash memory page at invalid address: 0x%08X.", address);
@@ -300,17 +302,27 @@ static signed int write_to_flash_page(DAP_Connection* dap_con, uint32_t address,
 	uint32_t start_aligned_address;
 	start_aligned_address = address;
 	start_aligned_address &= ~(0x10 - 1);
+	if (start_aligned_address != address) {
+		writes_to_do++;
+	}
 
 	uint32_t end_aligned_address;
 	end_aligned_address = address + data_len;
 	end_aligned_address &= ~(0x10 - 1);
+	if (end_aligned_address != address + data_len) {
+		writes_to_do++;
+	}
+
+	writes_to_do += (end_aligned_address - start_aligned_address) / 0x10;
 
 	if (start_aligned_address == end_aligned_address) {
 		signed int retval;
-		retval = _write_to_flash_page_partial(dap_con, address, data, data_len, do_preserve);
+		retval = _write_to_flash_page_partial(dap_con, address, data, data_len, do_preserve, 100);
 		if (retval) {
+			dprintf(STDERR, "\n");
 			RELAY_RETURN(retval);
 		}
+		dprintf(STDERR, "\n");
 		return SUCCESS_STATUS;
 	}
 
@@ -321,8 +333,11 @@ static signed int write_to_flash_page(DAP_Connection* dap_con, uint32_t address,
 		uint32_t part_length;
 		part_length = 0x10 - (address - current_aligned_address);
 		signed int retval;
-		retval = _write_to_flash_page_partial(dap_con, address, data, part_length, do_preserve);
+		writes_to_do++;
+		writes_done++;
+		retval = _write_to_flash_page_partial(dap_con, address, data, part_length, do_preserve, 100 * writes_done / writes_to_do);
 		if (retval) {
+			dprintf(STDERR, "\n");
 			RELAY_RETURN(retval);
 		}
 		data += part_length;
@@ -349,8 +364,10 @@ static signed int write_to_flash_page(DAP_Connection* dap_con, uint32_t address,
 		*/
 
 		signed int retval;
-		retval = _write_to_flash_page(dap_con, current_aligned_address, buffer[0], buffer[1], buffer[2], buffer[3]);
+		writes_done++;
+		retval = _write_to_flash_page(dap_con, current_aligned_address, buffer[0], buffer[1], buffer[2], buffer[3], 100 * writes_done / writes_to_do);
 		if (retval) {
+			dprintf(STDERR, "\n");
 			RELAY_RETURN(retval);
 		}
 		/*
@@ -386,12 +403,15 @@ static signed int write_to_flash_page(DAP_Connection* dap_con, uint32_t address,
 	uint32_t remaining_bytes = end_address - current_aligned_address;
 	if (current_aligned_address != end_address) {
 		signed int retval;
-		retval = _write_to_flash_page_partial(dap_con, current_aligned_address, data, remaining_bytes, do_preserve);
+		writes_done++;
+		retval = _write_to_flash_page_partial(dap_con, current_aligned_address, data, remaining_bytes, do_preserve, 100 * writes_done / writes_to_do);
 		if (retval) {
+			dprintf(STDERR, "\n");
 			RELAY_RETURN(retval);
 		}
 	}
 
+	dprintf(STDERR, "\n");
 	return SUCCESS_STATUS;
 }
 
@@ -522,11 +542,12 @@ static signed int write_to_flash(DAP_Connection* dap_con, uint32_t address, unsi
 				data++;
 				buffer_ptr++;
 			}
-			retval = _write_to_flash_page(dap_con, current_aligned_address + i, buffer[0], buffer[1], buffer[2], buffer[3]);
+			retval = _write_to_flash_page(dap_con, current_aligned_address + i, buffer[0], buffer[1], buffer[2], buffer[3], 100 * (i + 0x10) / page_size);
 			if (retval) {
 				RELAY_RETURN(retval);
 			}
 		}
+		dprintf(STDERR, "\n");
 		current_aligned_address += page_size;
 	}
 

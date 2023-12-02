@@ -566,7 +566,7 @@ signed int oper_read_memblock32(DAP_Connection* dap_con, uint32_t address, uint3
 
 signed int oper_init(DAP_Connection* dap_con) {
 	// Flush the RX Buffer
-	if (0) {
+	if (1) {
 		signed int retval;
 		retval = link_flush_rx(dap_con, LINK_BUFFER_LENGTH);
 		if (retval) {
