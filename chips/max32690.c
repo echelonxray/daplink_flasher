@@ -159,7 +159,7 @@ static signed int _write_to_flash_page(DAP_Connection* dap_con, uint32_t address
 		return ERROR_MALFORMED_INPUT;
 	}
 
-	dprintf(STDERR, "[STATUS] Writing 4 bytes at address 0x%08X\n", address);
+	dprintf(STDERR, "[STATUS] Writing 16 bytes at address 0x%08X\n", address);
 
 	//if (address & (0x10 - 1)) {
 	//	//dprintf(STDOUT, "Error: oper_write_flash_page(): Address Misaligned: 0x%08X.\n", address);
