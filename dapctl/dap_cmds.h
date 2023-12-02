@@ -39,7 +39,6 @@
 #define DAP_DISCONNECT 0x03
 
 #define DAP_SWJ_CLOCK 0x11
-
 #define DAP_SWJ_SEQUENCE 0x12
 
 #define DAP_TRANSFER 0x05
@@ -48,10 +47,14 @@
 #define DAP_TRANSFER_MODE_WRITE  0x0
 #define DAP_TRANSFER_MODE_READ   0x2
 
-signed int dap_info(DAP_Connection* dap_con, unsigned int id);
 signed int dap_connect(DAP_Connection* dap_con, unsigned int mode);
 signed int dap_disconnect(DAP_Connection* dap_con);
+
+signed int dap_info(DAP_Connection* dap_con, unsigned int id);
+
 signed int dap_transfer(DAP_Connection* dap_con, unsigned int dap_index, unsigned int transfer_count, unsigned char* req_buffer, uint32_t* data_buffer);
+
+signed int dap_swj_clock(DAP_Connection* dap_con, uint32_t clock_setting);
 signed int dap_swj_sequence(DAP_Connection* dap_con, unsigned int bit_count, unsigned char* data_buffer, unsigned int data_buffer_length);
 
 #endif

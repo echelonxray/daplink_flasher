@@ -5,6 +5,8 @@
 
 #include "../main.h"
 #include "dap_oper.h"
+#include "dap_cmds.h"
+#include "dap_link.h"
 #include "../errors.h"
 #include "../chips.h"
 #include <stdio.h>
@@ -563,6 +565,24 @@ signed int oper_read_memblock32(DAP_Connection* dap_con, uint32_t address, uint3
 }
 
 signed int oper_init(DAP_Connection* dap_con) {
+	// Flush the RX Buffer
+	if (0) {
+		signed int retval;
+		retval = link_flush_rx(dap_con, LINK_BUFFER_LENGTH);
+		if (retval) {
+			RELAY_RETURN(retval);
+		}
+	}
+
+	// SWJ Clock
+	if (0) {
+		signed int retval;
+		retval = dap_swj_clock(dap_con, 1000000); // 1 MHz
+		if (retval) {
+			RELAY_RETURN(retval);
+		}
+	}
+
 	// Connect
 	{
 		signed int retval;
@@ -571,6 +591,15 @@ signed int oper_init(DAP_Connection* dap_con) {
 			RELAY_RETURN(retval);
 		}
 		//dprintf(STDOUT, "Connect.\n");
+	}
+
+	// SWJ Clock
+	if (0) {
+		signed int retval;
+		retval = dap_swj_clock(dap_con, 1000000); // 1 MHz
+		if (retval) {
+			RELAY_RETURN(retval);
+		}
 	}
 
 	// SWJ Sequence

@@ -64,6 +64,7 @@ signed int link_send_data(DAP_Connection* dap_con, unsigned char* data, unsigned
 	                                   &len,     // Amount transferred
 	                                   10000);   // Timeout ms (10 sec)
 	if (retval != 0) {
+		// TODO: Print Error Text
 		return ERROR_LIBUSB_TXDEV;
 	}
 
@@ -82,6 +83,7 @@ signed int link_receive_data(DAP_Connection* dap_con, unsigned char* data, unsig
 	                                   &len,     // Amount transferred
 	                                   10000);   // Timeout ms (10 sec)
 	if (retval != 0) {
+		// TODO: Print Error Text
 		return ERROR_LIBUSB_RXDEV;
 	}
 
@@ -89,6 +91,43 @@ signed int link_receive_data(DAP_Connection* dap_con, unsigned char* data, unsig
 	//link_print_bytes(data, 64);
 
 	return len;
+}
+
+signed int link_flush_rx(DAP_Connection* dap_con, unsigned int buf_len) {
+	if (buf_len == 0) {
+		// TODO: Print Error Text
+		return ERROR_MALFORMED_INPUT;
+	}
+
+	libusb_device_handle* d_handle;
+	signed int len;
+	signed int retval;
+
+	void* data = malloc(buf_len);
+	if (data == NULL) {
+		PRINT_ERR(ERRSTR_MEMALLOC);
+		return ERROR_MEMALLOC;
+	}
+
+	d_handle = dap_con->device_handle;
+	do {
+		retval = libusb_interrupt_transfer(d_handle, // Device Handle
+		                                   0x81,     // Endpoint (Receive)
+		                                   data,     // Data Buffer
+		                                   buf_len,  // Length
+		                                   &len,     // Amount transferred
+		                                   10);   // Timeout ms (10 sec)
+		if (retval == LIBUSB_ERROR_TIMEOUT) {
+			break;
+		}
+		if (retval != 0) {
+			// TODO: Print Error Text
+			return ERROR_LIBUSB_RXDEV;
+		}
+	} while (len != 0);
+
+	free(data);
+	return SUCCESS_STATUS;
 }
 
 signed int link_find_and_connect(DAP_Connection* dap_con, uint16_t usb_vid, uint16_t usb_pid) {

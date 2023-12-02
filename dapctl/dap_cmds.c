@@ -5,44 +5,11 @@
 
 #include "../main.h"
 #include "dap_cmds.h"
+#include "dap_link.h"
 #include "../errors.h"
 #include <stdio.h>
 //#include <string.h>
 
-#define LINK_BUFFER_LENGTH 64
-
-signed int dap_info(DAP_Connection* dap_con, unsigned int id) {
-	unsigned char data[LINK_BUFFER_LENGTH];
-	signed int retval;
-
-	//memset(data, 0, LINK_BUFFER_LENGTH);
-	data[0] = DAP_INFO;
-	data[1] = id;
-
-	retval = link_send_data(dap_con, data, 2);
-	if (retval < 0) {
-		RELAY_RETURN(retval);
-	}
-
-	retval = link_receive_data(dap_con, data, LINK_BUFFER_LENGTH);
-	if (retval < 0) {
-		RELAY_RETURN(retval);
-	}
-
-	if (data[0] != DAP_INFO) {
-		PRINT_ERR("Erroneous return data/structure: 0x%02X.", (unsigned int)data[0]);
-		return ERROR_DEV_CMD_ERRONEOUS;
-	}
-
-	if (data[1] == 0) {
-		PRINT_ERR("No data returned.");
-		return ERROR_DEV_CMD_ERRONEOUS;
-	}
-
-	// TODO
-
-	return SUCCESS_STATUS;
-}
 signed int dap_connect(DAP_Connection* dap_con, unsigned int mode) {
 	unsigned char data[LINK_BUFFER_LENGTH];
 	signed int retval;
@@ -107,6 +74,40 @@ signed int dap_disconnect(DAP_Connection* dap_con) {
 
 	return SUCCESS_STATUS;
 }
+
+signed int dap_info(DAP_Connection* dap_con, unsigned int id) {
+	unsigned char data[LINK_BUFFER_LENGTH];
+	signed int retval;
+
+	//memset(data, 0, LINK_BUFFER_LENGTH);
+	data[0] = DAP_INFO;
+	data[1] = id;
+
+	retval = link_send_data(dap_con, data, 2);
+	if (retval < 0) {
+		RELAY_RETURN(retval);
+	}
+
+	retval = link_receive_data(dap_con, data, LINK_BUFFER_LENGTH);
+	if (retval < 0) {
+		RELAY_RETURN(retval);
+	}
+
+	if (data[0] != DAP_INFO) {
+		PRINT_ERR("Erroneous return data/structure: 0x%02X.", (unsigned int)data[0]);
+		return ERROR_DEV_CMD_ERRONEOUS;
+	}
+
+	if (data[1] == 0) {
+		PRINT_ERR("No data returned.");
+		return ERROR_DEV_CMD_ERRONEOUS;
+	}
+
+	// TODO
+
+	return SUCCESS_STATUS;
+}
+
 signed int dap_transfer(DAP_Connection* dap_con, unsigned int dap_index, unsigned int transfer_count, unsigned char* req_buffer, uint32_t* data_buffer) {
 	unsigned char data[LINK_BUFFER_LENGTH];
 	signed int retval;
@@ -192,6 +193,38 @@ signed int dap_transfer(DAP_Connection* dap_con, unsigned int dap_index, unsigne
 			data_buffer[i] = rx32;
 			k += 4;
 		}
+	}
+
+	return SUCCESS_STATUS;
+}
+
+signed int dap_swj_clock(DAP_Connection* dap_con, uint32_t clock_setting) {
+	unsigned char data[LINK_BUFFER_LENGTH];
+	signed int retval;
+
+	data[0] = DAP_SWJ_CLOCK;
+	data[1] = (clock_setting >>  0) & 0xFF;
+	data[2] = (clock_setting >>  8) & 0xFF;
+	data[3] = (clock_setting >> 16) & 0xFF;
+	data[4] = (clock_setting >> 24) & 0xFF;
+
+	retval = link_send_data(dap_con, data, 5);
+	if (retval < 0) {
+		RELAY_RETURN(retval);
+	}
+
+	retval = link_receive_data(dap_con, data, LINK_BUFFER_LENGTH);
+	if (retval < 0) {
+		RELAY_RETURN(retval);
+	}
+
+	if (data[0] != DAP_SWJ_CLOCK) {
+		PRINT_ERR("Erroneous return data/structure: 0x%02X.", (unsigned int)data[0]);
+		return ERROR_DEV_CMD_ERRONEOUS;
+	}
+	if (data[1] == DAP_STATUS_ERROR) {
+		PRINT_ERR("DAP SWJ Clock failed.");
+		return ERROR_DEV_CMD_FAILED;
 	}
 
 	return SUCCESS_STATUS;
