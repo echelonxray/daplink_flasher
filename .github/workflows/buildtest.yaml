@@ -1,0 +1,25 @@
+name: 'Test Build'
+
+on:
+  workflow_dispatch:
+  push:
+    branches: 
+      -dev
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  linux-debian_build:
+    runs-on: "debian-latest"
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout
+
+      - name: 'Install Build Dependencies'
+        run: ./buildtest/debian/install_dep.sh
+
+      - name: 'Test the Build'
+        run: 'make -j$(nproc) all'
