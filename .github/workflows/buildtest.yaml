@@ -15,9 +15,6 @@ jobs:
   linux-debian_build:
     runs-on: "debian-latest"
     steps:
-      - name: 'Checkout'
-        uses: actions/checkout
-
       - name: 'Install Build Dependencies'
         run: ./buildtest/debian/install_dep.sh
 
