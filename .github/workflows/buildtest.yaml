@@ -18,6 +18,9 @@ jobs:
       - name: 'Checkout'
         uses: actions/checkout@v4
 
+      - name: 'Update Runner'
+        run: 'sudo .github/workflows/buildtest/debian/update.sh'
+
       - name: 'Install Build Dependencies'
         run: 'sudo .github/workflows/buildtest/debian/install_dep.sh'
 
