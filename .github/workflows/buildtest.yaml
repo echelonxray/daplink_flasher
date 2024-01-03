@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 'Install Build Dependencies'
-        run: .github/workflows/buildtest/debian/install_dep.sh
+        run: 'sudo .github/workflows/buildtest/debian/install_dep.sh'
 
       - name: 'Test the Build'
         run: 'make -j$(nproc) all'
