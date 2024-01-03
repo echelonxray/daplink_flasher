@@ -12,8 +12,8 @@ permissions:
   pull-requests: read
 
 jobs:
-  linux-debian_build:
-    runs-on: "debian-latest"
+  linux-ubuntu_build:
+    runs-on: "ubuntu-latest"
     steps:
       - name: 'Install Build Dependencies'
         run: ./buildtest/debian/install_dep.sh
